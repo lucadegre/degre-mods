@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en" class="settings-page" tabindex="0" data-settings-key="degre-attackradar-settings-v1">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+
+    <title>DEGRE Attack Radar - Settings</title>
+
+    <link id="favicon" rel="shortcut icon" href="../images/icon.png"/>
+    <link rel="stylesheet" href="/pages/css/common.css"/>
+
+    <script type="module">
+        import {settingsMain} from '../src/attackradar.mjs';
+        settingsMain();
+    </script>
+
+    <style>
+        .section {
+            padding: 8px 12px;
+        }
+        .section .title {
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            gap: 6px;
+        }
+        key {
+            flex: 0 0 160px;
+            font-size: 0.85em;
+        }
+        input[type="range"] {
+            flex: 1;
+            max-width: 80px;
+        }
+        input[type="number"] {
+            width: 70px;
+        }
+        input[type="color"] {
+            width: 40px;
+            height: 24px;
+            padding: 0;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        select {
+            padding: 2px 4px;
+        }
+        hr {
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin: 8px 0;
+        }
+        .bg-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        .bg-row key {
+            flex: 0 0 160px;
+        }
+        .transparent-label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin: 0;
+            font-size: 0.85em;
+        }
+        .distance-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 5px;
+        }
+        .distance-row key {
+            flex: 0 0 160px;
+            font-size: 0.85em;
+        }
+        .always-label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin: 0;
+            font-size: 0.8em;
+            opacity: 0.9;
+        }
+        .color-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 5px;
+        }
+        .color-row key {
+            flex: 0 0 160px;
+            font-size: 0.85em;
+        }
+        .audio-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 5px;
+        }
+        .audio-row key {
+            flex: 0 0 160px;
+            font-size: 0.85em;
+        }
+        .audio-preview {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            padding: 2px 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+        .audio-preview:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .hint {
+            font-size: 0.75em;
+            opacity: 0.6;
+            margin-left: 166px;
+            margin-bottom: 5px;
+        }
+        .preview-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        .preview-row key {
+            flex: 0 0 160px;
+            font-size: 0.85em;
+        }
+        .preview-hint {
+            font-size: 0.75em;
+            opacity: 0.7;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="titlebar">
+        <header>
+            <div class="logo"><img title="icon" src="../images/icon.png"/></div>
+            <div class="title">DEGRE Attack Radar - Settings</div>
+            <div class="filler"></div>
+            <div class="buttons">
+                <div title="Close this window" class="button close electron-only">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <div id="settings">
+        <form id="options" class="section">
+            <div class="title">Display</div>
+
+            <label>
+                <key>Language:</key>
+                <select name="language">
+                    <option value="en">English</option>
+                    <option value="it">Italiano</option>
+                    <option value="fr">Français</option>
+                    <option value="es">Español</option>
+                </select>
+            </label>
+
+            <label>
+                <key>Opacity:</key>
+                <input type="range" name="opacity" min="0.1" max="1" step="0.05"/>
+                <input type="number" name="opacity" min="0.1" max="1" step="0.05"/>
+            </label>
+
+            <div class="bg-row">
+                <key>Background color:</key>
+                <input type="color" name="bgColor"/>
+                <label class="transparent-label">
+                    <input type="checkbox" name="bgTransparent"/>
+                    <span>Transparent</span>
+                </label>
+            </div>
+
+            <div class="preview-row">
+                <key>Positioning preview:</key>
+                <input type="checkbox" name="layoutPreview"/>
+                <span class="preview-hint">Disable after positioning and sizing</span>
+            </div>
+
+            <hr/>
+            <div class="title">Detection</div>
+
+            <div class="distance-row">
+                <key>Active under:</key>
+                <input type="number" name="attackDetectorDistance" min="100" max="50000" step="100"/>
+                <span style="font-size:0.85em">m</span>
+                <label class="always-label">
+                    <input type="checkbox" name="attackDetectorAlways"/>
+                    <span>Always</span>
+                </label>
+            </div>
+
+            <label>
+                <key>Power threshold:</key>
+                <input type="number" name="attackDetectorWatts" min="300" max="1500" step="10"/>
+                <span style="font-size:0.85em">W</span>
+            </label>
+
+            <label>
+                <key>W/kg threshold:</key>
+                <input type="number" name="attackDetectorWkg" min="3.0" max="15.0" step="0.1"/>
+                <span style="font-size:0.85em">w/kg</span>
+            </label>
+
+            <label>
+                <key>Detection logic:</key>
+                <select name="attackDetectorLogic">
+                    <option value="OR">OR (watts OR w/kg)</option>
+                    <option value="AND">AND (watts AND w/kg)</option>
+                </select>
+            </label>
+            <div class="hint">OR = attack if exceeds any threshold</div>
+
+            <label>
+                <key>Team race mode:</key>
+                <input type="checkbox" name="teamRace"/>
+            </label>
+            <div class="hint">Distinguish teammates from opponents</div>
+
+            <hr/>
+            <div class="title">Colors</div>
+
+            <div class="color-row">
+                <key>Opponent color:</key>
+                <input type="color" name="colorOpponent"/>
+            </div>
+
+            <div class="color-row">
+                <key>Teammate color:</key>
+                <input type="color" name="colorTeammate"/>
+            </div>
+
+            <hr/>
+            <div class="title">Audio</div>
+
+            <label>
+                <key>Volume:</key>
+                <input type="range" name="audioVolume" min="0" max="100" step="5"/>
+                <input type="number" name="audioVolume" min="0" max="100" step="5"/>
+            </label>
+
+            <div class="audio-row">
+                <key>Attack opponents:</key>
+                <input type="checkbox" name="audioOthers"/>
+                <button type="button" class="audio-preview" data-audio="others">▶</button>
+            </div>
+
+            <div class="audio-row">
+                <key>Attack teammates:</key>
+                <input type="checkbox" name="audioTeam"/>
+                <button type="button" class="audio-preview" data-audio="team">▶</button>
+            </div>
+
+            <div class="audio-row">
+                <key>Attack mixed:</key>
+                <input type="checkbox" name="audioMixed"/>
+                <button type="button" class="audio-preview" data-audio="mixed">▶</button>
+            </div>
+
+        </form>
+    </div>
+</body>
+</html>

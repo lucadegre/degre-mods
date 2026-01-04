@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en" class="settings-page" tabindex="0" data-settings-key="degre-powerbar-settings-v1">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+
+    <title>DEGRE Power Bar - Settings</title>
+
+    <link id="favicon" rel="shortcut icon" href="../images/icon.png"/>
+    <link rel="stylesheet" href="/pages/css/common.css"/>
+
+    <script type="module">
+        import {settingsMain} from '../src/powerbar.mjs';
+        settingsMain();
+        
+        // Handle transparent checkbox to ghost/unghost color picker
+        document.addEventListener('DOMContentLoaded', () => {
+            const transparentCheckbox = document.querySelector('input[name="bgTransparent"]');
+            const colorPicker = document.querySelector('input[name="bgColor"]');
+            
+            function updateColorPickerState() {
+                if (transparentCheckbox.checked) {
+                    colorPicker.disabled = true;
+                    colorPicker.style.opacity = '0.3';
+                    colorPicker.style.cursor = 'not-allowed';
+                } else {
+                    colorPicker.disabled = false;
+                    colorPicker.style.opacity = '1';
+                    colorPicker.style.cursor = 'pointer';
+                }
+            }
+            
+            // Initial state
+            setTimeout(updateColorPickerState, 100);
+            
+            // On change
+            transparentCheckbox.addEventListener('change', updateColorPickerState);
+        });
+    </script>
+
+    <style>
+        .section {
+            padding: 8px 12px;
+        }
+        .section .title {
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            gap: 6px;
+        }
+        key {
+            flex: 0 0 110px;
+            font-size: 0.85em;
+        }
+        input[type="range"] {
+            flex: 1;
+            max-width: 80px;
+        }
+        input[type="number"] {
+            width: 65px;
+        }
+        input[type="color"] {
+            width: 40px;
+            height: 24px;
+            padding: 0;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 3px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        select {
+            padding: 2px 4px;
+        }
+        hr {
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin: 6px 0;
+        }
+        
+        /* Background row */
+        .bg-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        .bg-row key {
+            flex: 0 0 110px;
+        }
+        .bg-row .transparent-label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin: 0;
+            font-size: 0.85em;
+        }
+        
+        /* Zone grid */
+        .zones-grid {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 4px 8px;
+            align-items: center;
+            font-size: 0.85em;
+        }
+        .zone-label {
+            font-weight: 500;
+            opacity: 0.9;
+        }
+        .zone-threshold {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .zone-threshold input[type="number"] {
+            width: 55px;
+        }
+        .zone-threshold span {
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div id="titlebar">
+        <header>
+            <div class="logo"><img title="icon" src="../images/icon.png"/></div>
+            <div class="title">Power Bar - Settings</div>
+            <div class="filler"></div>
+            <div class="buttons">
+                <div title="Close this window" class="button close electron-only">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <div id="settings">
+        <form id="options" class="section">
+            <div class="title">Display</div>
+            
+            <label>
+                <key>Orientation:</key>
+                <select name="orientation">
+                    <option value="vertical">Vertical</option>
+                    <option value="horizontal">Horizontal</option>
+                </select>
+            </label>
+
+            <label>
+                <key>Reverse:</key>
+                <input type="checkbox" name="reverse"/>
+                <span style="font-size:0.8em; opacity:0.7">Flip fill direction</span>
+            </label>
+
+            <label>
+                <key>Opacity:</key>
+                <input type="range" name="opacity" min="0.1" max="1" step="0.05"/>
+                <input type="number" name="opacity" min="0.1" max="1" step="0.05"/>
+            </label>
+
+            <div class="bg-row">
+                <key>Background color:</key>
+                <input type="color" name="bgColor"/>
+                <label class="transparent-label">
+                    <input type="checkbox" name="bgTransparent"/>
+                    <span>Transparent</span>
+                </label>
+            </div>
+
+            <label>
+                <key>Hide when:</key>
+                <select name="hideWhen">
+                    <option value="never">Never</option>
+                    <option value="speed0">Speed is 0</option>
+                    <option value="watts0">Watts are 0</option>
+                </select>
+            </label>
+
+            <hr/>
+            <div class="title">Scale</div>
+
+            <label>
+                <key>Display mode:</key>
+                <select name="displayMode">
+                    <option value="wkg">W/kg</option>
+                    <option value="watts">Watts</option>
+                </select>
+            </label>
+
+            <label>
+                <key>Max W/kg:</key>
+                <input type="range" name="maxWkg" min="5" max="15" step="0.5"/>
+                <input type="number" name="maxWkg" min="5" max="15" step="0.5"/>
+            </label>
+
+            <label>
+                <key>Max Watts:</key>
+                <input type="range" name="maxWatts" min="500" max="2000" step="50"/>
+                <input type="number" name="maxWatts" min="500" max="2000" step="50"/>
+            </label>
+
+            <hr/>
+            <div class="title">Power Zones</div>
+            
+            <div class="zones-grid">
+                <span class="zone-label">Z1 Recovery</span>
+                <div class="zone-threshold">
+                    <input type="number" name="z1Threshold" min="0" max="5" step="0.1"/>
+                    <span>W/kg</span>
+                </div>
+                <input type="color" name="z1Color"/>
+
+                <span class="zone-label">Z2 Endurance</span>
+                <div class="zone-threshold">
+                    <input type="number" name="z2Threshold" min="0" max="6" step="0.1"/>
+                    <span>W/kg</span>
+                </div>
+                <input type="color" name="z2Color"/>
+
+                <span class="zone-label">Z3 Tempo</span>
+                <div class="zone-threshold">
+                    <input type="number" name="z3Threshold" min="0" max="7" step="0.1"/>
+                    <span>W/kg</span>
+                </div>
+                <input type="color" name="z3Color"/>
+
+                <span class="zone-label">Z4 Threshold</span>
+                <div class="zone-threshold">
+                    <input type="number" name="z4Threshold" min="0" max="8" step="0.1"/>
+                    <span>W/kg</span>
+                </div>
+                <input type="color" name="z4Color"/>
+
+                <span class="zone-label">Z5 VO2max</span>
+                <div class="zone-threshold">
+                    <input type="number" name="z5Threshold" min="0" max="10" step="0.1"/>
+                    <span>W/kg</span>
+                </div>
+                <input type="color" name="z5Color"/>
+
+                <span class="zone-label">Z6 Anaerobic</span>
+                <div class="zone-threshold">
+                    <input type="number" name="z6Threshold" min="0" max="12" step="0.1"/>
+                    <span>W/kg</span>
+                </div>
+                <input type="color" name="z6Color"/>
+
+                <span class="zone-label">Z7 Neuromuscular</span>
+                <div class="zone-threshold">
+                    <input type="number" name="z7Threshold" min="0" max="15" step="0.1"/>
+                    <span>W/kg</span>
+                </div>
+                <input type="color" name="z7Color"/>
+            </div>
+
+        </form>
+    </div>
+</body>
+</html>

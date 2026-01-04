@@ -1,0 +1,66 @@
+/* DEGRE Finish Well - CSS */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+}
+
+#content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: var(--bg-color, #000000);
+    border-radius: 8px;
+    opacity: var(--widget-opacity, 1);
+    transition: opacity 0.3s ease;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+/* Dimmed state - nearly invisible but hoverable */
+#content.dimmed {
+    opacity: 0.02;
+}
+
+/* On hover, reveal dimmed content */
+body:hover #content.dimmed {
+    opacity: 1;
+}
+
+/* Distance display */
+#distance {
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 700;
+    font-style: italic;
+    color: white;
+    text-align: center;
+    line-height: 1;
+    text-shadow: 
+        2px 2px 0 rgba(0,0,0,0.8),
+        -1px -1px 0 rgba(0,0,0,0.8),
+        1px -1px 0 rgba(0,0,0,0.8),
+        -1px 1px 0 rgba(0,0,0,0.8),
+        0 0 20px rgba(0,0,0,0.5);
+    -webkit-text-stroke: 2px rgba(100,100,100,0.6);
+}
+
+/* Auto-size mode: fill container */
+#distance.auto-size {
+    font-size: min(70vh, 35vw);
+}
+
+/* Finished state */
+#distance.finished {
+    color: #55ff55;
+    text-shadow: 
+        2px 2px 0 rgba(0,0,0,0.8),
+        0 0 30px rgba(85,255,85,0.5);
+}

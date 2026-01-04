@@ -1,0 +1,82 @@
+{
+    "manifest_version": 1,
+    "name": "DEGRE Mods",
+    "description": "Mod collection by Luca DEGRE - Power Bar, Player, Finish Well, Attack Radar, Ticker",
+    "author": "Luca De Gregorio",
+    "website_url": "https://lucadegre.it",
+    "version": "3.4.0",
+    "id": "degre-mods",
+    "web_root": "pages",
+    "windows": [
+        {
+            "file": "pages/powerbar.html",
+            "id": "degre-powerbar",
+            "name": "DEGRE Power Bar",
+            "description": "Dynamic power zone bar with configurable orientation and display",
+            "overlay": true,
+            "frame": false,
+            "default_bounds": {
+                "width": 144,
+                "height": 684,
+                "x": 235,
+                "y": 202
+            }
+        },
+        {
+            "file": "pages/player.html",
+            "id": "degre-player",
+            "name": "DEGRE Player",
+            "description": "Modern music player with NowPlay integration",
+            "overlay": true,
+            "frame": false,
+            "default_bounds": {
+                "width": 250,
+                "height": 250,
+                "x": 1173,
+                "y": 51
+            }
+        },
+        {
+            "file": "pages/finishwell.html",
+            "id": "degre-finishwell",
+            "name": "DEGRE Finish Well",
+            "description": "Final kilometers countdown with bell, sprint loop, and applause",
+            "overlay": true,
+            "frame": false,
+            "default_bounds": {
+                "width": 400,
+                "height": 150,
+                "x": 760,
+                "y": 400
+            }
+        },
+        {
+            "file": "pages/attackradar.html",
+            "id": "degre-attackradar",
+            "name": "DEGRE Attack Radar",
+            "description": "Attack detection with visual alerts and audio notifications",
+            "overlay": true,
+            "frame": false,
+            "default_bounds": {
+                "width": 500,
+                "height": 80,
+                "x": 710,
+                "y": 300
+            }
+        },
+        {
+            "file": "pages/ticker.html",
+            "id": "degre-ticker",
+            "name": "DEGRE Ticker",
+            "description": "Customizable scrolling text with visibility cycling",
+            "overlay": true,
+            "frame": false,
+            "default_bounds": {
+                "width": 600,
+                "height": 50,
+                "x": 400,
+                "y": 700
+            }
+        }
+    ]
+}

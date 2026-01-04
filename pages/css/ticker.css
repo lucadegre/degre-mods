@@ -1,0 +1,89 @@
+/* DEGRE Ticker - Scrolling Text Widget */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+}
+
+#content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    background: var(--bg-color, transparent);
+    border-radius: 4px;
+    opacity: var(--widget-opacity, 1);
+    overflow: hidden;
+    transition: opacity 0.5s ease;
+}
+
+#content.hidden-cycle {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Ticker container */
+.ticker-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Scrolling text wrapper */
+.ticker-wrapper {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    will-change: transform;
+}
+
+/* Text content - duplicated for seamless loop */
+.ticker-text {
+    display: inline-block;
+    padding-right: 50px; /* Gap between repetitions */
+    font-family: var(--font-family, 'Roboto', sans-serif);
+    font-size: var(--font-size, 24px);
+    color: var(--text-color, #ffffff);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+/* Animation - left to right */
+.ticker-wrapper.ltr {
+    animation: scroll-ltr var(--scroll-duration, 10s) linear infinite;
+}
+
+@keyframes scroll-ltr {
+    0% {
+        transform: translateX(-50%);
+    }
+    100% {
+        transform: translateX(0%);
+    }
+}
+
+/* Animation - right to left */
+.ticker-wrapper.rtl {
+    animation: scroll-rtl var(--scroll-duration, 10s) linear infinite;
+}
+
+@keyframes scroll-rtl {
+    0% {
+        transform: translateX(0%);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+/* Paused state */
+.ticker-wrapper.paused {
+    animation-play-state: paused;
+}

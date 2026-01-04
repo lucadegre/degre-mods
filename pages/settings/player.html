@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" class="settings-page" tabindex="0" data-settings-key="degre-player-settings-v2">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+
+    <title>DEGRE Player - Settings</title>
+
+    <link id="favicon" rel="shortcut icon" href="../images/icon.png"/>
+    <link rel="stylesheet" href="/pages/css/common.css"/>
+
+    <script type="module">
+        import {settingsMain} from '../src/player.mjs';
+        settingsMain();
+    </script>
+
+    <style>
+        .section {
+            padding: 8px 12px;
+        }
+        .section .title {
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            gap: 6px;
+        }
+        key {
+            flex: 0 0 130px;
+            font-size: 0.85em;
+        }
+        select {
+            padding: 2px 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="titlebar">
+        <header>
+            <div class="logo"><img title="icon" src="../images/icon.png"/></div>
+            <div class="title">Player - Settings</div>
+            <div class="filler"></div>
+            <div class="buttons">
+                <div title="Close this window" class="button close electron-only">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <div id="settings">
+        <form id="options" class="section">
+            <div class="title">Display</div>
+            
+            <label title="Display language">
+                <key>Language:</key>
+                <select name="language">
+                    <option value="en">English</option>
+                    <option value="it">Italiano</option>
+                    <option value="fr">Français</option>
+                    <option value="es">Español</option>
+                </select>
+            </label>
+
+            <label title="When to hide the player">
+                <key>Hide when:</key>
+                <select name="hideWhen">
+                    <option value="never">Never</option>
+                    <option value="speed0">Speed is 0</option>
+                    <option value="watts0">Watts are 0</option>
+                </select>
+            </label>
+
+            <label title="Autoplay behavior">
+                <key>Autoplay:</key>
+                <select name="autoplay">
+                    <option value="none">None</option>
+                    <option value="immediate">Immediate</option>
+                    <option value="on_event_start">On event start</option>
+                </select>
+            </label>
+
+        </form>
+    </div>
+</body>
+</html>

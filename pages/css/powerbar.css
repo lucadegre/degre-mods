@@ -1,0 +1,250 @@
+/* DEGRE Power Bar - CSS */
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500;700&display=swap');
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+}
+
+body.transparent-bg {
+    background: transparent !important;
+}
+
+#content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: transparent !important;
+}
+
+/* Container principale della barra */
+.powerbar-container {
+    flex: 1;
+    position: relative;
+    box-sizing: border-box;
+    background: var(--bg-color, rgba(0,0,0,0.3));
+    border-radius: 4px;
+    opacity: var(--widget-opacity, 1);
+    transition: opacity 0.3s ease;
+}
+
+/* Hidden by setting - but show on hover (use tiny opacity to keep interactivity) */
+.powerbar-container.hidden-by-setting {
+    opacity: 0.02;
+}
+
+#content:hover .powerbar-container.hidden-by-setting,
+.powerbar-container.hidden-by-setting:hover {
+    opacity: 1;
+}
+
+/* Wrapper che cresce - contiene il gradiente con overflow hidden */
+.powerbar-wrapper {
+    position: absolute;
+    overflow: hidden;
+    border-radius: 4px;
+    transition: all 0.1s ease-out;
+}
+
+/* Gradiente FISSO a GRADINI con righe vuote - barrette più grandi (+50%) */
+.powerbar-fill {
+    position: absolute;
+    border-radius: 4px;
+    transition: box-shadow 0.2s ease;
+    
+    /* Maschera per creare le righe vuote (gradini) - 18px barra + 6px gap */
+    -webkit-mask-image: repeating-linear-gradient(
+        to top,
+        black 0,
+        black 18px,
+        transparent 18px,
+        transparent 24px
+    );
+    mask-image: repeating-linear-gradient(
+        to top,
+        black 0,
+        black 18px,
+        transparent 18px,
+        transparent 24px
+    );
+}
+
+/* Glow effect quando sopra la soglia massima */
+.powerbar-fill.glow {
+    box-shadow: 
+        0 0 10px rgba(255, 255, 255, 0.8),
+        0 0 20px rgba(255, 255, 255, 0.6),
+        0 0 30px rgba(255, 255, 255, 0.4),
+        0 0 40px rgba(255, 255, 255, 0.2);
+    animation: glow-pulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes glow-pulse {
+    0% {
+        box-shadow: 
+            0 0 10px rgba(255, 255, 255, 0.8),
+            0 0 20px rgba(255, 255, 255, 0.6),
+            0 0 30px rgba(255, 255, 255, 0.4);
+    }
+    100% {
+        box-shadow: 
+            0 0 15px rgba(255, 255, 255, 1),
+            0 0 30px rgba(255, 255, 255, 0.8),
+            0 0 45px rgba(255, 255, 255, 0.5);
+    }
+}
+
+/* === ORIENTAMENTO VERTICALE === */
+/* Wrapper cresce dal basso verso l'alto - NO top definito */
+.powerbar-container.vertical .powerbar-wrapper {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* top non definito - height è impostata da JS */
+}
+
+/* Vertical with padding - sinistra, destra, sotto */
+.powerbar-container.vertical.with-padding .powerbar-wrapper {
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    /* top non definito */
+}
+
+.powerbar-container.vertical .powerbar-fill {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--container-height, 100%);
+}
+
+/* === VERTICALE REVERSE === */
+/* Wrapper cresce dall'alto verso il basso */
+.powerbar-container.vertical.reverse .powerbar-wrapper {
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: auto;
+}
+
+.powerbar-container.vertical.reverse.with-padding .powerbar-wrapper {
+    left: 6px;
+    right: 6px;
+    top: 6px;
+    bottom: auto;
+}
+
+.powerbar-container.vertical.reverse .powerbar-fill {
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: auto;
+    height: var(--container-height, 100%);
+    
+    /* Maschera invertita - dall'alto verso il basso */
+    -webkit-mask-image: repeating-linear-gradient(
+        to bottom,
+        black 0,
+        black 18px,
+        transparent 18px,
+        transparent 24px
+    );
+    mask-image: repeating-linear-gradient(
+        to bottom,
+        black 0,
+        black 18px,
+        transparent 18px,
+        transparent 24px
+    );
+}
+
+/* === ORIENTAMENTO ORIZZONTALE === */
+/* Wrapper cresce da sinistra verso destra - NO right definito */
+.powerbar-container.horizontal .powerbar-wrapper {
+    left: 0;
+    top: 0;
+    bottom: 0;
+    /* right non definito - width è impostata da JS */
+}
+
+/* Horizontal with padding - sinistra, sopra, sotto */
+.powerbar-container.horizontal.with-padding .powerbar-wrapper {
+    left: 6px;
+    top: 6px;
+    bottom: 6px;
+    /* right non definito */
+}
+
+.powerbar-container.horizontal .powerbar-fill {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--container-width, 100%);
+    
+    /* Maschera orizzontale per righe verticali - 9px barra + 3px gap (+50%) */
+    -webkit-mask-image: repeating-linear-gradient(
+        to right,
+        black 0,
+        black 9px,
+        transparent 9px,
+        transparent 12px
+    );
+    mask-image: repeating-linear-gradient(
+        to right,
+        black 0,
+        black 9px,
+        transparent 9px,
+        transparent 12px
+    );
+}
+
+/* === ORIZZONTALE REVERSE === */
+/* Wrapper cresce da destra verso sinistra */
+.powerbar-container.horizontal.reverse .powerbar-wrapper {
+    right: 0;
+    top: 0;
+    bottom: 0;
+    left: auto;
+}
+
+.powerbar-container.horizontal.reverse.with-padding .powerbar-wrapper {
+    right: 6px;
+    top: 6px;
+    bottom: 6px;
+    left: auto;
+}
+
+.powerbar-container.horizontal.reverse .powerbar-fill {
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: auto;
+    width: var(--container-width, 100%);
+    
+    /* Maschera invertita - da destra verso sinistra */
+    -webkit-mask-image: repeating-linear-gradient(
+        to left,
+        black 0,
+        black 9px,
+        transparent 9px,
+        transparent 12px
+    );
+    mask-image: repeating-linear-gradient(
+        to left,
+        black 0,
+        black 9px,
+        transparent 9px,
+        transparent 12px
+    );
+}
+
+/* === STATO NO DATA === */
+.no-data .powerbar-fill {
+    filter: grayscale(50%);
+}
