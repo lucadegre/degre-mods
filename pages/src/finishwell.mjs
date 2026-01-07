@@ -170,8 +170,11 @@ function updateDisplay() {
     const visDistance = settings.visibilityAlways ? Infinity : (settings.visibilityDistance || 3000);
     const isVisible = (state.distanceRemaining <= visDistance && state.distanceRemaining > 0) 
                       || state.currentState === 'FINISHED';
+    const hasSolidBackground = !settings.bgTransparent;
     
-    if (isVisible) {
+    // If solid background, always show widget (for positioning)
+    // If transparent, use dimmed state when not visible
+    if (isVisible || hasSolidBackground) {
         elements.container.classList.remove('dimmed');
     } else {
         elements.container.classList.add('dimmed');
@@ -179,13 +182,14 @@ function updateDisplay() {
     
     if (state.currentState === 'FINISHED') {
         // Show checkered flag instead of 0
-        elements.distance.textContent = '🏁';
+        elements.distance.textContent = 'ðŸ';
         elements.distance.classList.add('finished');
     } else if (state.distanceRemaining > 0) {
         elements.distance.textContent = formatDistance(state.distanceRemaining);
         elements.distance.classList.remove('finished');
     } else {
-        elements.distance.textContent = '';
+        // Not in race - show placeholder if background is solid
+        elements.distance.textContent = hasSolidBackground ? '----' : '';
         elements.distance.classList.remove('finished');
     }
 }
