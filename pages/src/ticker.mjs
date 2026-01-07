@@ -101,7 +101,7 @@ function applyTextStyle() {
             fontStack = "Impact, sans-serif";
             break;
         case 'Comic Sans':
-            fontStack = "'Comic Sans MS', cursive";
+            fontStack = "'Comic Sans MS', 'Comic Neue', 'Ubuntu', cursive, sans-serif";
             break;
     }
     container.style.setProperty('--font-family', fontStack);
