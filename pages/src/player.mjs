@@ -12,7 +12,7 @@ const NOWPLAY_API = `${NOWPLAY_BASE}/api`;
 // Translations
 const i18n = {
     en: {
-        bannerText: '🎵 Copyright-safe music for creators! This song of mine is royalty-free! A mention of song, artist & album would make me proud, but it\'s totally optional! Find and follow "Luca DEGRE" on Spotify, Apple Music, Amazon Music or your favorite streaming platform.',
+        bannerText: 'ðŸŽµ Copyright-safe music for creators! This song of mine is royalty-free! A mention of song, artist & album would make me proud, but it\'s totally optional! Find and follow "Luca DEGRE" on Spotify, Apple Music, Amazon Music or your favorite streaming platform.',
         selectPlaylist: 'Select playlist...',
         loading: 'Loading...',
         unknownTrack: 'Unknown track',
@@ -23,33 +23,33 @@ const i18n = {
         racingOnly: 'Only during races',
     },
     it: {
-        bannerText: '🎵 Musica sicura per i creator! Questa mia canzone è royalty-free! Una menzione di brano, artista e album mi renderebbe orgoglioso, ma è del tutto opzionale! Trova e segui "Luca DEGRE" su Spotify, Apple Music, Amazon Music o la tua piattaforma preferita.',
+        bannerText: 'ðŸŽµ Musica sicura per i creator! Questa mia canzone Ã¨ royalty-free! Una menzione di brano, artista e album mi renderebbe orgoglioso, ma Ã¨ del tutto opzionale! Trova e segui "Luca DEGRE" su Spotify, Apple Music, Amazon Music o la tua piattaforma preferita.',
         selectPlaylist: 'Seleziona playlist...',
         loading: 'Caricamento...',
         unknownTrack: 'Brano sconosciuto',
         unknownAlbum: 'Album sconosciuto',
         language: 'Lingua',
-        visibility: 'Visibilità',
+        visibility: 'VisibilitÃ ',
         always: 'Sempre visibile',
         racingOnly: 'Solo durante le gare',
     },
     fr: {
-        bannerText: '🎵 Musique libre de droits pour les créateurs! Cette chanson est la mienne et elle est gratuite! Une mention de la chanson, de l\'artiste et de l\'album me rendrait fier, mais c\'est totalement optionnel! Trouvez et suivez "Luca DEGRE" sur Spotify, Apple Music, Amazon Music ou votre plateforme préférée.',
-        selectPlaylist: 'Sélectionner playlist...',
+        bannerText: 'ðŸŽµ Musique libre de droits pour les crÃ©ateurs! Cette chanson est la mienne et elle est gratuite! Une mention de la chanson, de l\'artiste et de l\'album me rendrait fier, mais c\'est totalement optionnel! Trouvez et suivez "Luca DEGRE" sur Spotify, Apple Music, Amazon Music ou votre plateforme prÃ©fÃ©rÃ©e.',
+        selectPlaylist: 'SÃ©lectionner playlist...',
         loading: 'Chargement...',
         unknownTrack: 'Piste inconnue',
         unknownAlbum: 'Album inconnu',
         language: 'Langue',
-        visibility: 'Visibilité',
+        visibility: 'VisibilitÃ©',
         always: 'Toujours visible',
         racingOnly: 'Pendant les courses',
     },
     es: {
-        bannerText: '🎵 ¡Música segura para creadores! ¡Esta canción mía es libre de derechos! ¡Una mención de la canción, artista y álbum me haría sentir orgulloso, pero es totalmente opcional! Encuentra y sigue a "Luca DEGRE" en Spotify, Apple Music, Amazon Music o tu plataforma favorita.',
+        bannerText: 'ðŸŽµ Â¡MÃºsica segura para creadores! Â¡Esta canciÃ³n mÃ­a es libre de derechos! Â¡Una menciÃ³n de la canciÃ³n, artista y Ã¡lbum me harÃ­a sentir orgulloso, pero es totalmente opcional! Encuentra y sigue a "Luca DEGRE" en Spotify, Apple Music, Amazon Music o tu plataforma favorita.',
         selectPlaylist: 'Seleccionar playlist...',
         loading: 'Cargando...',
         unknownTrack: 'Pista desconocida',
-        unknownAlbum: 'Álbum desconocido',
+        unknownAlbum: 'Ãlbum desconocido',
         language: 'Idioma',
         visibility: 'Visibilidad',
         always: 'Siempre visible',
@@ -217,11 +217,11 @@ function checkScrollNeeded() {
             const album = elements.trackAlbum.textContent;
             inner.innerHTML = `
                 <span class="track-title">${title}</span>
-                <span class="track-separator">•</span>
+                <span class="track-separator">â€¢</span>
                 <span class="track-album">${album}</span>
                 <span class="track-separator" style="margin: 0 30px;"></span>
                 <span class="track-title">${title}</span>
-                <span class="track-separator">•</span>
+                <span class="track-separator">â€¢</span>
                 <span class="track-album">${album}</span>
             `;
         } else {
@@ -463,7 +463,7 @@ function initDOM() {
     
     elements.trackSeparator = document.createElement('span');
     elements.trackSeparator.className = 'track-separator';
-    elements.trackSeparator.textContent = '•';
+    elements.trackSeparator.textContent = 'â€¢';
     
     elements.trackAlbum = document.createElement('span');
     elements.trackAlbum.className = 'track-album';
@@ -500,6 +500,7 @@ function initDOM() {
     
     // Audio element
     state.audio = new Audio();
+    state.audio.preload = 'none'; // Don't preload entire file, stream progressively
     state.audio.addEventListener('play', onPlay);
     state.audio.addEventListener('pause', onPause);
     state.audio.addEventListener('ended', onEnded);
