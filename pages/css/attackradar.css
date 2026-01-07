@@ -1,4 +1,4 @@
-/* DEGRE Attack Radar - CSS */
+/* DEGRE Attack Radar - CSS v3.5.1 */
 
 html, body {
     margin: 0;
@@ -17,11 +17,11 @@ html, body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: var(--bg-color, #000000);
+    background: transparent;
     border-radius: 8px;
     opacity: var(--widget-opacity, 1);
     transition: opacity 0.3s ease;
-    padding: 10px;
+    padding: 15px 0 0 0;
     box-sizing: border-box;
 }
 
@@ -52,14 +52,15 @@ body:hover #content.dimmed {
 
 /* Single attack box */
 .attack-box {
+    position: relative;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 6px 12px;
+    padding: 4px;
     border-radius: 12px;
     font-family: 'Roboto Mono', monospace;
     font-weight: 700;
-    font-size: min(45vh, 5vw);
     color: white;
     text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
     box-shadow: 
@@ -72,6 +73,7 @@ body:hover #content.dimmed {
     flex: 1;
     height: 100%;
     box-sizing: border-box;
+    overflow: visible;
 }
 
 /* Full width single banner */
@@ -80,59 +82,64 @@ body:hover #content.dimmed {
     max-width: 100%;
 }
 
-/* Single attacker with details - two line layout */
-.attack-box.single-attacker {
-    flex-direction: column;
-    justify-content: center;
+/* Badge container - positioned at top, overlapping border */
+.badge-container {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 10;
+}
+
+/* Position badge */
+.position-badge {
+    display: inline-flex;
     align-items: center;
-    padding: 4px 12px;
+    justify-content: center;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: min(20vh, 2.2vw);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    white-space: nowrap;
+}
+
+/* Info line - single line with name/count + stats */
+.attacker-info-line {
+    font-size: min(32vh, 3.5vw);
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+}
+
+/* Single attacker layout */
+.attack-box.single-attacker {
     gap: 2px;
 }
 
-.attack-box.single-attacker .attacker-name {
-    font-size: min(40vh, 4.5vw);
-    font-weight: 700;
-    line-height: 1.1;
-}
-
-.attack-box.single-attacker .attacker-stats {
-    font-size: min(25vh, 2.8vw);
-    font-weight: 500;
-    opacity: 0.95;
-    line-height: 1.1;
-}
-
-/* Multiple attackers - two line layout */
+/* Multiple attackers layout */
 .attack-box.multi-attacker {
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 4px 12px;
     gap: 2px;
 }
 
 .attack-box.multi-attacker .attacker-count {
-    font-size: min(40vh, 4.5vw);
+    font-size: min(35vh, 4vw);
     font-weight: 700;
-    line-height: 1.1;
+    line-height: 1.2;
 }
 
-.attack-box.multi-attacker .attacker-stats {
-    font-size: min(25vh, 2.8vw);
-    font-weight: 500;
-    opacity: 0.95;
-    line-height: 1.1;
+/* Sprint mode indicator - pulsing */
+.attack-box.sprint-threat {
+    animation: pulse-threat 0.5s ease-in-out infinite alternate;
 }
 
-/* Position indicators */
-.attack-box .pos-ahead {
-    color: #ff3333;
-    font-weight: 700;
-}
-
-.attack-box .pos-behind {
-    color: #33ccff;
-    font-weight: 700;
+@keyframes pulse-threat {
+    from { box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); }
+    to { box-shadow: 0 0 25px rgba(255, 0, 0, 0.9); }
 }
 
 /* Mixed attack - proportional boxes */
@@ -143,8 +150,8 @@ body:hover #content.dimmed {
 /* Audio toggle icon - bottom left, visible on hover */
 .audio-toggle {
     position: absolute;
-    bottom: 25px;
-    left: 15px;
+    bottom: 8px;
+    left: 8px;
     width: 28px;
     height: 28px;
     cursor: pointer;
