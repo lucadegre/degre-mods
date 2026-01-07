@@ -50,15 +50,122 @@ function t(key) {
     return i18n[lang]?.[key] || i18n.en[key] || key;
 }
 
+// === WEIGHT SIZE CONVERSION ===
+function getWeightSize(weight) {
+    if (!weight || weight <= 0) return '';
+    if (weight < 50) return 'XXXS';
+    if (weight <= 53) return 'XXS';
+    if (weight <= 58) return 'XS';
+    if (weight <= 64) return 'S';
+    if (weight <= 71) return 'M';
+    if (weight <= 79) return 'L';
+    if (weight <= 88) return 'XL';
+    if (weight <= 98) return 'XXL';
+    return 'XXXL';
+}
+
+// === COLOR UTILITIES ===
+function isLightColor(hex) {
+    // Convert hex to RGB and calculate luminance
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    // Luminance formula
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5;
+}
+
+function getTextColorForBg(bgColor) {
+    return isLightColor(bgColor) ? '#000000' : '#ffffff';
+}
+
+// === NAME TRUNCATION ===
+function truncateName(name, maxLength = 15) {
+    if (!name || name.length <= maxLength) return name;
+    return name.substring(0, maxLength - 1) + '…';
+}
+
+// === SPRINT MODE LOGIC ===
+function updateSprintMode() {
+    const settings = getSettingsDirect();
+    const thresholdWatts = settings.attackDetectorWatts || 700;
+    const thresholdWkg = settings.attackDetectorWkg || 8.0;
+    const logic = settings.attackDetectorLogic || 'OR';
+    
+    const myWkg = state.myWeight > 0 ? state.myPower / state.myWeight : 0;
+    const distance = state.distanceRemaining;
+    
+    // Check if my output exceeds attack thresholds
+    let isAttacking = false;
+    if (logic === 'OR') {
+        isAttacking = state.myPower >= thresholdWatts || myWkg >= thresholdWkg;
+    } else {
+        isAttacking = state.myPower >= thresholdWatts && myWkg >= thresholdWkg;
+    }
+    
+    // Sprint mode activation: distance < 1000m AND attacking
+    if (distance > 0 && distance < 1000 && isAttacking) {
+        state.sprintMode = true;
+    }
+    // Sprint mode deactivation: distance > 300m AND not attacking
+    else if (distance > 300 && !isAttacking) {
+        state.sprintMode = false;
+    }
+    // Under 300m: stay in sprint mode if already active
+    // (no change if distance <= 300)
+}
+
+// === GAP TRACKING ===
+function updateGapHistory(athleteId, currentGap) {
+    const now = Date.now();
+    const history = state.gapHistory[athleteId];
+    
+    if (!history) {
+        state.gapHistory[athleteId] = {
+            lastGap: currentGap,
+            lastTime: now,
+            gapTrend: 0 // 0 = stable, negative = closing, positive = opening
+        };
+        return 0;
+    }
+    
+    const timeDelta = (now - history.lastTime) / 1000; // seconds
+    if (timeDelta > 0.5) { // Update every 0.5s minimum
+        const gapDelta = currentGap - history.lastGap;
+        const trend = gapDelta / timeDelta; // gap change per second
+        
+        history.gapTrend = trend;
+        history.lastGap = currentGap;
+        history.lastTime = now;
+    }
+    
+    return history.gapTrend;
+}
+
+// === SPRINT MODE THREAT DETECTION ===
+function isSprintThreat(athlete) {
+    // Only threats from behind
+    if (athlete.relativePos <= 0) return false; // ahead or same position = not a threat
+    
+    // Check if their speed > my speed
+    const theirSpeed = athlete.speed || 0;
+    if (theirSpeed <= state.mySpeed) return false;
+    
+    // Check if gap is closing (negative trend = getting closer)
+    const gapTrend = updateGapHistory(athlete.athleteId, athlete.gap || 0);
+    if (gapTrend >= 0) return false; // gap stable or opening = not a threat
+    
+    return true;
+}
+
 // === DEFAULT SETTINGS ===
 common.settingsStore.setDefault({
     language: 'en',
     // Visibility
     attackDetectorDistance: 5000,
     attackDetectorAlways: false,
-    // Background
-    bgTransparent: false,
-    bgColor: '#000000',
+    // Opacity
     opacity: 1,
     // Attack detection
     attackDetectorWatts: 700,
@@ -68,6 +175,8 @@ common.settingsStore.setDefault({
     // Colors
     colorOpponent: '#ff4444',
     colorTeammate: '#55bb55',
+    colorAhead: '#fc6719',  // Zwift orange
+    colorBehind: '#00bfff', // Zwift blue
     // Audio
     audioEnabled: true,
     audioVolume: 70,
@@ -92,7 +201,14 @@ const state = {
     audioCooldowns: { others: 0, team: 0, mixed: 0 },
     // Layout preview
     previewScenario: 0,
-    previewInterval: null
+    previewInterval: null,
+    // Sprint mode
+    sprintMode: false,
+    mySpeed: 0,
+    myPower: 0,
+    myWeight: 70,
+    // Gap tracking for sprint mode
+    gapHistory: {} // { athleteId: { lastGap, lastTime, gapTrend } }
 };
 
 // === AUDIO ===
@@ -173,6 +289,8 @@ function detectAttacks(group) {
         const power = athlete.state.power || 0;
         const weight = athlete.athlete?.weight || 0;
         const wkg = weight > 0 ? (power / weight) : 0;
+        const speed = athlete.state.speed || 0;
+        const gap = athlete.gap || 0;
         
         if (!isAttack(power, wkg)) continue;
         
@@ -183,12 +301,18 @@ function detectAttacks(group) {
         // Position relative to me (negative = ahead, positive = behind)
         const relativePos = myIndex >= 0 ? (i - myIndex) : 0;
         
+        const attackerData = { athleteId, name, power, team: athleteTeam, weight, wkg, relativePos, speed, gap };
+        
+        // Sprint mode filtering: only show threats from behind
+        if (state.sprintMode) {
+            if (!isSprintThreat(attackerData)) continue;
+            attackerData.isSprintThreat = true;
+        }
+        
         let isTeammate = false;
         if (teamRace && state.myTeam && athleteTeam) {
             isTeammate = athleteTeam === state.myTeam;
         }
-        
-        const attackerData = { athleteId, name, power, team: athleteTeam, weight, wkg, relativePos };
         
         if (isTeammate) {
             attackers.teammates.push(attackerData);
@@ -348,6 +472,10 @@ function updateAttackBanner(hasEnemies, hasTeammates, hasAttack, settings) {
 }
 
 function createAttackBox(type, attackers, widthPercent, color) {
+    const settings = getSettingsDirect();
+    const colorAhead = settings.colorAhead || '#fc6719';
+    const colorBehind = settings.colorBehind || '#00bfff';
+    
     const box = document.createElement('div');
     box.className = 'attack-box';
     box.style.background = `linear-gradient(180deg, ${color} 0%, ${adjustColor(color, -30)} 100%)`;
@@ -359,87 +487,119 @@ function createAttackBox(type, attackers, widthPercent, color) {
     
     const count = attackers.length;
     
+    // Count ahead/behind
+    let aheadCount = 0, behindCount = 0;
+    for (const a of attackers) {
+        if (a.relativePos < 0) aheadCount++;
+        else if (a.relativePos > 0) behindCount++;
+    }
+    
+    // Check for sprint threat (pulsing animation)
+    if (attackers.some(a => a.isSprintThreat)) {
+        box.classList.add('sprint-threat');
+    }
+    
+    const isMixed = aheadCount > 0 && behindCount > 0;
+    
+    // Create badge container (always on top)
+    const badgeContainer = document.createElement('div');
+    badgeContainer.className = 'badge-container';
+    
+    if (isMixed) {
+        // Mixed: two badges side by side
+        if (aheadCount > 0) {
+            const badgeAhead = document.createElement('span');
+            badgeAhead.className = 'position-badge';
+            badgeAhead.style.background = colorAhead;
+            badgeAhead.style.color = getTextColorForBg(colorAhead);
+            badgeAhead.innerHTML = `${aheadCount}▲`;
+            badgeContainer.appendChild(badgeAhead);
+        }
+        if (behindCount > 0) {
+            const badgeBehind = document.createElement('span');
+            badgeBehind.className = 'position-badge';
+            badgeBehind.style.background = colorBehind;
+            badgeBehind.style.color = getTextColorForBg(colorBehind);
+            badgeBehind.innerHTML = `${behindCount}▼`;
+            badgeContainer.appendChild(badgeBehind);
+        }
+    } else {
+        // Single direction: one badge
+        const badge = document.createElement('span');
+        badge.className = 'position-badge';
+        if (aheadCount > 0) {
+            badge.style.background = colorAhead;
+            badge.style.color = getTextColorForBg(colorAhead);
+            badge.innerHTML = `▲ ${t('ahead').toUpperCase()}`;
+        } else if (behindCount > 0) {
+            badge.style.background = colorBehind;
+            badge.style.color = getTextColorForBg(colorBehind);
+            badge.innerHTML = `▼ ${t('behind').toUpperCase()}`;
+        }
+        if (aheadCount > 0 || behindCount > 0) {
+            badgeContainer.appendChild(badge);
+        }
+    }
+    
+    if (badgeContainer.children.length > 0) {
+        box.appendChild(badgeContainer);
+    }
+    
     if (count === 1) {
-        // Single attacker with details - two line layout
+        // Single attacker: name + stats on one line
         const attacker = attackers[0];
         box.classList.add('single-attacker');
         
-        const nameLine = document.createElement('div');
-        nameLine.className = 'attacker-name';
-        nameLine.textContent = attacker.name;
+        const infoLine = document.createElement('div');
+        infoLine.className = 'attacker-info-line';
         
-        const statsLine = document.createElement('div');
-        statsLine.className = 'attacker-stats';
-        
+        const name = truncateName(attacker.name, 15);
         const power = attacker.power || 0;
         const wkg = attacker.wkg || 0;
         const weight = attacker.weight || 0;
-        const relPos = attacker.relativePos || 0;
         
-        // Position text: "davanti" or "dietro"
-        let posText = '';
-        if (relPos < 0) {
-            posText = `<span class="pos-ahead">${t('ahead')}</span>`;
-        } else if (relPos > 0) {
-            posText = `<span class="pos-behind">${t('behind')}</span>`;
-        }
+        const parts = [name];
+        parts.push(`${power}W`);
+        if (wkg > 0) parts.push(`${wkg.toFixed(1)}w/kg`);
+        const size = getWeightSize(weight);
+        if (size) parts.push(size);
         
-        const stats = [];
-        stats.push(`${power}W`);
-        if (wkg > 0) stats.push(`${wkg.toFixed(1)}w/kg`);
-        if (weight > 0) stats.push(`${Math.round(weight)}kg`);
-        
-        statsLine.innerHTML = stats.join(' · ') + (posText ? ` · ${posText}` : '');
-        
-        box.appendChild(nameLine);
-        box.appendChild(statsLine);
+        infoLine.textContent = parts.join(' · ');
+        box.appendChild(infoLine);
         
     } else if (count > 1) {
-        // Multiple attackers - show count, average stats, and position breakdown
+        // Multiple attackers
         box.classList.add('multi-attacker');
         
-        const countLine = document.createElement('div');
-        countLine.className = 'attacker-count';
-        countLine.textContent = `${count} ${t(type + 's')}`;
-        
-        // Calculate averages
-        let totalPower = 0, totalWkg = 0, validWkg = 0;
-        let aheadCount = 0, behindCount = 0;
-        
-        for (const a of attackers) {
-            totalPower += a.power || 0;
-            if (a.wkg > 0) {
-                totalWkg += a.wkg;
-                validWkg++;
+        if (isMixed) {
+            // Mixed: just count, no stats
+            const countLine = document.createElement('div');
+            countLine.className = 'attacker-count';
+            countLine.textContent = `${count} ${t(type + 's')}`;
+            box.appendChild(countLine);
+        } else {
+            // Same direction: count + stats on one line
+            let totalPower = 0, totalWkg = 0, validWkg = 0;
+            for (const a of attackers) {
+                totalPower += a.power || 0;
+                if (a.wkg > 0) {
+                    totalWkg += a.wkg;
+                    validWkg++;
+                }
             }
-            if (a.relativePos < 0) aheadCount++;
-            else if (a.relativePos > 0) behindCount++;
+            const avgPower = Math.round(totalPower / count);
+            const avgWkg = validWkg > 0 ? (totalWkg / validWkg) : 0;
+            
+            const infoLine = document.createElement('div');
+            infoLine.className = 'attacker-info-line';
+            
+            const parts = [`${count} ${t(type + 's')}`];
+            parts.push(`Ø ${avgPower}W`);
+            if (avgWkg > 0) parts.push(`${avgWkg.toFixed(1)}w/kg`);
+            
+            infoLine.textContent = parts.join(' · ');
+            box.appendChild(infoLine);
         }
-        
-        const avgPower = Math.round(totalPower / count);
-        const avgWkg = validWkg > 0 ? (totalWkg / validWkg) : 0;
-        
-        // Build position breakdown
-        let posBreakdown = '';
-        if (aheadCount > 0 && behindCount > 0) {
-            posBreakdown = `<span class="pos-ahead">${aheadCount} ${t('ahead')}</span> <span class="pos-behind">${behindCount} ${t('behind')}</span>`;
-        } else if (aheadCount > 0) {
-            posBreakdown = `<span class="pos-ahead">${t('ahead')}</span>`;
-        } else if (behindCount > 0) {
-            posBreakdown = `<span class="pos-behind">${t('behind')}</span>`;
-        }
-        
-        const statsLine = document.createElement('div');
-        statsLine.className = 'attacker-stats';
-        
-        const stats = [];
-        stats.push(`Ø ${avgPower}W`);
-        if (avgWkg > 0) stats.push(`${avgWkg.toFixed(1)}w/kg`);
-        
-        statsLine.innerHTML = stats.join(' · ') + (posBreakdown ? ` · ${posBreakdown}` : '');
-        
-        box.appendChild(countLine);
-        box.appendChild(statsLine);
     }
     
     return box;
@@ -456,13 +616,6 @@ function adjustColor(hex, amount) {
 // === BACKGROUND ===
 function applyBackground() {
     const settings = getSettingsDirect();
-    
-    if (settings.bgTransparent) {
-        elements.container.style.setProperty('--bg-color', 'transparent');
-    } else {
-        elements.container.style.setProperty('--bg-color', settings.bgColor || '#000000');
-    }
-    
     const opacity = settings.opacity !== undefined ? settings.opacity : 1;
     elements.container.style.setProperty('--widget-opacity', opacity);
 }
@@ -622,6 +775,13 @@ async function onAthleteUpdate(athleteData) {
     
     state.myAthleteId = athleteData.athleteId;
     
+    // Capture my data for sprint mode
+    state.myPower = athleteState.power || 0;
+    state.mySpeed = athleteState.speed || 0;
+    if (athleteData.athlete?.weight) {
+        state.myWeight = athleteData.athlete.weight;
+    }
+    
     if (settings.teamRace && athleteData.athlete) {
         state.myTeam = athleteData.athlete.team || null;
     }
@@ -639,7 +799,11 @@ async function onAthleteUpdate(athleteData) {
     } else {
         state.distanceRemaining = 0;
         state.attackers = { enemies: [], teammates: [] };
+        state.sprintMode = false;
     }
+    
+    // Update sprint mode
+    updateSprintMode();
     
     updateDisplay();
 }
@@ -739,22 +903,6 @@ export async function main() {
 export async function settingsMain() {
     common.initInteractionListeners();
     await common.initSettingsForm('form#options')();
-    
-    // Handle transparent checkbox
-    const transparentCheckbox = document.querySelector('input[name="bgTransparent"]');
-    const colorPicker = document.querySelector('input[name="bgColor"]');
-    
-    function updateColorPickerState() {
-        if (transparentCheckbox && colorPicker) {
-            colorPicker.disabled = transparentCheckbox.checked;
-            colorPicker.style.opacity = transparentCheckbox.checked ? '0.3' : '1';
-        }
-    }
-    
-    setTimeout(updateColorPickerState, 100);
-    if (transparentCheckbox) {
-        transparentCheckbox.addEventListener('change', updateColorPickerState);
-    }
     
     // Handle "Always" checkbox
     const alwaysCheckbox = document.querySelector('input[name="attackDetectorAlways"]');
