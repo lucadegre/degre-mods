@@ -1,5 +1,5 @@
 /**
- * DEGRE Finish Well v1.1
+ * DEGRE Finish Well v1.2
  * Final kilometers countdown with bell, sprint loop, and applause
  */
 
@@ -26,6 +26,9 @@ common.settingsStore.setDefault({
     audioApplause: true
 });
 
+// How long the checkered flag stays on screen after the finish
+const FLAG_DURATION_MS = 10000;
+
 // === STATE ===
 const state = {
     currentState: 'HIDDEN', // HIDDEN, VISIBLE, FINISHED
@@ -38,7 +41,11 @@ const state = {
     sprintPlaying: false,
     sprintArmed: false,
     applausePlayed: false,
-    finishedTime: null
+    finishedTime: null,
+    flagTimeout: null,
+    // Events already finished this session: never re-trigger the finish
+    // sequence for these, even if telemetry flaps in and out of the event
+    finishedSubgroupIds: new Set()
 };
 
 // === AUDIO ===
@@ -237,33 +244,33 @@ async function onAthleteUpdate(athleteData) {
     const eventSubgroupId = athleteState.eventSubgroupId || 0;
     
     if (eventSubgroupId > 0) {
+        // Event already finished this session: stay quiet, never replay
+        // bell/sprint/applause even if we keep riding past the line
+        if (state.finishedSubgroupIds.has(eventSubgroupId)) {
+            if (state.currentState === 'FINISHED' && state.finishedTime &&
+                Date.now() - state.finishedTime >= FLAG_DURATION_MS) {
+                hideFlag();
+            }
+            updateDisplay();
+            return;
+        }
+
         state.eventSubgroupId = eventSubgroupId;
-        
+
         const eventDistance = await getEventDistance(eventSubgroupId);
         if (eventDistance > 0) {
             state.eventDistance = eventDistance;
             const elapsedDistance = athleteState.eventDistance || 0;
             state.distanceRemaining = Math.max(0, eventDistance - elapsedDistance);
         }
-        
-        // Check for finish
-        if (state.currentState === 'FINISHED') return;
-        
-        if (state.distanceRemaining < 10 && state.currentState !== 'HIDDEN') {
-            state.currentState = 'FINISHED';
-            state.finishedTime = Date.now();
-            stopSprintLoop();
-            
-            // Play applause only once (check flag)
-            if (!state.applausePlayed) {
-                state.applausePlayed = true;
-                playApplause();
-            }
-            
-            updateDisplay();
+
+        // Finish only from VISIBLE: we must actually have ridden the final
+        // stretch inside the event, not just appeared near the line
+        if (state.distanceRemaining < 10 && state.currentState === 'VISIBLE') {
+            finishRace(eventSubgroupId);
             return;
         }
-        
+
         state.currentState = 'VISIBLE';
         
         // Check bell
@@ -281,6 +288,35 @@ async function onAthleteUpdate(athleteData) {
     updateDisplay();
 }
 
+// === FINISH ===
+function finishRace(eventSubgroupId) {
+    state.currentState = 'FINISHED';
+    state.finishedTime = Date.now();
+    state.finishedSubgroupIds.add(eventSubgroupId);
+    stopSprintLoop();
+
+    // Play applause only once (check flag)
+    if (!state.applausePlayed) {
+        state.applausePlayed = true;
+        playApplause();
+    }
+
+    // Hide the flag after a while even if no more telemetry arrives
+    clearTimeout(state.flagTimeout);
+    state.flagTimeout = setTimeout(hideFlag, FLAG_DURATION_MS);
+
+    updateDisplay();
+}
+
+function hideFlag() {
+    if (state.currentState !== 'FINISHED') return;
+    clearTimeout(state.flagTimeout);
+    state.flagTimeout = null;
+    state.currentState = 'HIDDEN';
+    state.distanceRemaining = 0;
+    updateDisplay();
+}
+
 // === RESET ===
 function resetState() {
     state.currentState = 'HIDDEN';
@@ -292,7 +328,11 @@ function resetState() {
     state.sprintArmed = false;
     state.applausePlayed = false;
     stopSprintLoop();
+    clearTimeout(state.flagTimeout);
+    state.flagTimeout = null;
     state.finishedTime = null;
+    // finishedSubgroupIds is kept on purpose: leaving and re-entering the
+    // same event (telemetry flapping) must not replay the finish sequence
     updateDisplay();
 }
 
@@ -333,7 +373,7 @@ export async function main() {
         applyFontSize();
     }, 2000);
     
-    console.log('[DEGRE Finish Well v1.1] Initialized');
+    console.log('[DEGRE Finish Well v1.2] Initialized');
 }
 
 export async function settingsMain() {
