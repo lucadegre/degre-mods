@@ -406,8 +406,11 @@ function updateDisplay() {
     const hasEnemies = state.attackers.enemies.length > 0;
     const hasTeammates = state.attackers.teammates.length > 0;
     
-    const attackDistance = settings.attackDetectorAlways ? Infinity : (settings.attackDetectorDistance || 5000);
-    const attackActive = state.distanceRemaining <= attackDistance && state.distanceRemaining > 0;
+    // "Always" bypasses the distance gate entirely: works in free rides and
+    // events without a known total distance (laps/time based).
+    const attackDistance = settings.attackDetectorDistance || 5000;
+    const attackActive = settings.attackDetectorAlways ||
+        (state.distanceRemaining <= attackDistance && state.distanceRemaining > 0);
     const hasAttack = (hasEnemies || hasTeammates) && attackActive;
     
     if (hasAttack) {
@@ -798,8 +801,12 @@ async function onAthleteUpdate(athleteData) {
         }
     } else {
         state.distanceRemaining = 0;
-        state.attackers = { enemies: [], teammates: [] };
         state.sprintMode = false;
+        // With "Always" on, attackers come from onGroupsUpdate even outside
+        // events — clearing them here would make the banner flicker.
+        if (!settings.attackDetectorAlways) {
+            state.attackers = { enemies: [], teammates: [] };
+        }
     }
     
     // Update sprint mode
@@ -822,9 +829,13 @@ function onGroupsUpdate(groups) {
     }
     
     const settings = common.settingsStore.get();
-    const attackDistance = settings.attackDetectorAlways ? Infinity : (settings.attackDetectorDistance || 5000);
-    
-    if (state.distanceRemaining > attackDistance || state.distanceRemaining <= 0) {
+    const attackDistance = settings.attackDetectorDistance || 5000;
+
+    // "Always" bypasses the distance gate: detection also runs in free rides
+    // and in events without a known total distance (laps/time based), where
+    // distanceRemaining stays 0.
+    if (!settings.attackDetectorAlways &&
+        (state.distanceRemaining > attackDistance || state.distanceRemaining <= 0)) {
         state.attackers = { enemies: [], teammates: [] };
         updateDisplay();
         return;
