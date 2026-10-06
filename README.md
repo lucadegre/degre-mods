@@ -3,7 +3,7 @@
 Professional widget collection for competitive Zwift racing and streaming.
 
 **Author:** Luca De Gregorio  
-**Version:** 3.4.0  
+**Version:** 3.6.0  
 **License:** MIT
 
 ---
@@ -52,6 +52,16 @@ Music player with NowPlay integration for streaming.
 - Copyright banner for streaming compliance
 - Autoplay option
 
+### 📻 Radio
+NowPlay web radio inside Sauce, in sync with everyone listening on the website and on Discord.
+
+- Compact "now playing" bar that scales with the window; play/stop and volume
+- Stations (Zwift Time, All Songs, Luca's Favorite, Abyss Bloom, Pop)
+- Thumbs up/down on the track on air
+- Song requests: pick a track of the station, it plays right after the current one
+- Autoplay when the widget opens or when an event starts
+- Royalty-free music by Luca DEGRE, safe for streaming
+
 ### 📜 Ticker
 Customizable scrolling text overlay.
 
@@ -77,7 +87,7 @@ Customizable scrolling text overlay.
 ## Requirements
 
 - Sauce for Zwift v1.0.0 or later
-- For Player: NowPlay account and playlists
+- Player and Radio stream from www.lucadegre.it (internet connection required)
 
 ---
 

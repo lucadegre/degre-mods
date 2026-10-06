@@ -53,9 +53,8 @@ function t(key) {
 // === WEIGHT SIZE CONVERSION ===
 function getWeightSize(weight) {
     if (!weight || weight <= 0) return '';
-    if (weight < 50) return 'XXXS';
-    if (weight <= 53) return 'XXS';
-    if (weight <= 58) return 'XS';
+    // Under 60kg: show exact weight to expose suspicious values
+    if (weight < 60) return `${Math.round(weight)}kg`;
     if (weight <= 64) return 'S';
     if (weight <= 71) return 'M';
     if (weight <= 79) return 'L';

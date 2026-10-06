@@ -1,10 +1,10 @@
 {
     "manifest_version": 1,
     "name": "DEGRE",
-    "description": "Mod collection by Luca DEGRE - Power Bar, Player, Finish Well, Attack Radar, Ticker",
+    "description": "Mod collection by Luca DEGRE - Power Bar, Player, Radio, Finish Well, Attack Radar, Ticker",
     "author": "Luca De Gregorio",
     "website_url": "https://lucadegre.it",
-    "version": "3.5.14",
+    "version": "3.6.0",
     "id": "degre-mods",
     "web_root": "pages",
     "windows": [
@@ -34,6 +34,20 @@
                 "height": 250,
                 "x": 1173,
                 "y": 51
+            }
+        },
+        {
+            "file": "pages/radio.html",
+            "id": "degre-radio",
+            "name": "DEGRE Radio",
+            "description": "NowPlay web radio in sync with the website: stations, votes, song requests",
+            "overlay": true,
+            "frame": false,
+            "default_bounds": {
+                "width": 400,
+                "height": 72,
+                "x": 760,
+                "y": 60
             }
         },
         {

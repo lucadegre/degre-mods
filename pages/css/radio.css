@@ -1,0 +1,267 @@
+/* DEGRE Radio v1.1 - CSS
+   radio.html: compact "now playing" bar (the whole overlay window).
+   radio-panel.html: stations, votes, requests in a separate child window. */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+}
+
+#content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: transparent !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #fff;
+    --accent: #ff8c42;
+}
+
+.radio {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    transition: opacity 0.3s ease;
+}
+.radio.hidden-by-setting { opacity: 0.02; }
+#content:hover .radio.hidden-by-setting { opacity: 1; }
+
+/* === BAR ===
+   The bar fills the whole overlay window and scales with its height:
+   resize the window vertically and cover, text and buttons grow with it.
+   (vh = window height, since the window is the viewport) */
+.radio { height: 100%; }
+.bar {
+    display: flex;
+    align-items: center;
+    gap: clamp(8px, 11vh, 18px);
+    padding: clamp(6px, 8vh, 14px) clamp(8px, 11vh, 18px);
+    background: rgba(18, 18, 30, 0.82);
+    border-radius: clamp(10px, 14vh, 20px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    height: 100%;
+    box-sizing: border-box;
+}
+.bar .cover {
+    height: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: clamp(6px, 8vh, 14px);
+    background: #2a2a4a center/cover no-repeat;
+    flex: 0 0 auto;
+    cursor: pointer;
+}
+.bar .info {
+    flex: 1 1 auto;
+    min-width: 0;
+    line-height: 1.25;
+}
+.bar .info .line {
+    display: flex;
+    align-items: center;
+    gap: clamp(4px, 6vh, 10px);
+    min-width: 0;
+}
+.bar .live {
+    font-size: clamp(8px, 11vh, 13px);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    padding: 0.2em 0.6em;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.7);
+    flex: 0 0 auto;
+}
+.radio.playing .bar .live { background: #e53935; color: #fff; }
+.bar .station {
+    font-size: clamp(9px, 12.5vh, 15px);
+    color: rgba(255, 255, 255, 0.55);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.bar .listeners {
+    font-size: clamp(9px, 12.5vh, 15px);
+    color: rgba(255, 255, 255, 0.55);
+    flex: 0 0 auto;
+}
+.bar .title {
+    font-size: clamp(13px, 18vh, 28px);
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.bar .artist {
+    font-size: clamp(10px, 14vh, 19px);
+    color: rgba(255, 255, 255, 0.7);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.bar .nextreq {
+    font-size: clamp(9px, 12.5vh, 15px);
+    color: var(--accent);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.bar .nextreq:empty { display: none; }
+
+.bar .controls {
+    display: flex;
+    align-items: center;
+    gap: clamp(3px, 5vh, 10px);
+    flex: 0 0 auto;
+}
+.ibtn {
+    width: clamp(28px, 39vh, 56px);
+    height: clamp(28px, 39vh, 56px);
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.15s ease;
+}
+.ibtn:hover { background: rgba(255, 255, 255, 0.22); }
+.ibtn svg { width: 58%; height: 58%; }
+.ibtn.play { background: var(--accent); color: #1a1a2e; width: clamp(32px, 44vh, 64px); height: clamp(32px, 44vh, 64px); }
+a.ibtn { text-decoration: none; }
+.ibtn.play:hover { filter: brightness(1.1); }
+.ibtn.active { background: var(--accent); color: #1a1a2e; }
+.ibtn.voted { color: var(--accent); }
+
+/* Volume: slim slider that appears next to the speaker on hover */
+.vol {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.vol input[type="range"] {
+    width: 0;
+    opacity: 0;
+    transition: width 0.2s ease, opacity 0.2s ease;
+    accent-color: var(--accent);
+    height: 4px;
+}
+.vol:hover input[type="range"], .vol input[type="range"]:focus { width: 70px; opacity: 1; }
+
+/* === PANEL (separate child window: radio-panel.html) === */
+body.radio-panel-page { background: #1a1a2e !important; }
+body.radio-panel-page .ibtn { width: 32px; height: 32px; }
+body.radio-panel-page #content {
+    height: auto;
+    min-height: 100%;
+    overflow: auto;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #fff;
+    --accent: #ff8c42;
+}
+.panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px 14px;
+}
+.panel .nowrow { display: flex; align-items: center; gap: 10px; }
+.panel .nowrow .cover { width: 48px; height: 48px; border-radius: 8px; background: #2a2a4a center/cover no-repeat; flex: 0 0 auto; }
+.panel .nowrow .info { min-width: 0; line-height: 1.25; }
+.panel .nowrow .title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.panel .nowrow .artist { font-size: 11px; color: rgba(255, 255, 255, 0.7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.panel .nowrow .nextreq { font-size: 10px; color: var(--accent); }
+.panel .nowrow .nextreq:empty { display: none; }
+.panel .phead {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 2px 0 0;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    cursor: pointer;
+}
+.chip:hover { background: rgba(255, 255, 255, 0.16); }
+.chip.active { background: var(--accent); border-color: var(--accent); color: #1a1a2e; }
+
+.panel input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+    font: inherit;
+    font-size: 13px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    padding: 7px 10px;
+    outline: none;
+}
+.panel input[type="text"]:focus { border-color: var(--accent); }
+.panel input::placeholder { color: rgba(255, 255, 255, 0.4); }
+
+.reqlist { display: flex; flex-direction: column; gap: 4px; }
+.reqitem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    font-size: 12px;
+}
+.reqitem img { width: 30px; height: 30px; border-radius: 5px; object-fit: cover; flex: 0 0 auto; }
+.reqitem .rt { flex: 1 1 auto; min-width: 0; }
+.reqitem .rt b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reqitem .rt small { display: block; color: rgba(255, 255, 255, 0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reqitem .rpos { flex: 0 0 auto; width: 14px; text-align: center; font-weight: 700; color: rgba(255, 255, 255, 0.5); }
+.reqitem .rbtn {
+    flex: 0 0 auto;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1a1a2e;
+    background: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+.reqitem .rbtn:disabled { opacity: 0.4; cursor: default; }
+.status {
+    font-size: 12px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-left: 3px solid var(--accent);
+}
+.status:empty { display: none; }
+.status.err { background: rgba(255, 120, 120, 0.14); border-left-color: #ff9a9a; }
+.muted { font-size: 11px; color: rgba(255, 255, 255, 0.45); }
+.row { display: flex; align-items: center; gap: 6px; }
+.row .filler { flex: 1 1 auto; }
+.feedback {
+    font-size: 11px;
+    color: var(--accent);
+    min-height: 1.2em;
+}

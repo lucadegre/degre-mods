@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" class="settings-page" tabindex="0" data-settings-key="degre-radio-settings-v2">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+
+    <title>DEGRE Radio - Settings</title>
+
+    <link id="favicon" rel="shortcut icon" href="../images/icon.png"/>
+    <link rel="stylesheet" href="/pages/css/common.css"/>
+
+    <script type="module">
+        import {settingsMain} from '../src/radio.mjs';
+        settingsMain();
+    </script>
+
+    <style>
+        .section { padding: 6px 12px; }
+        #settings { overflow: hidden; }
+        .section .title {
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        label { display: flex; align-items: center; margin-bottom: 5px; gap: 6px; }
+        key { flex: 0 0 120px; font-size: 0.85em; }
+        select { padding: 2px 4px; max-width: 180px; flex: 1; }
+        input[type="text"] { flex: 1; max-width: 180px; padding: 3px 6px; }
+        input[type="range"] { flex: 1; max-width: 110px; }
+        input[type="number"] { width: 60px; }
+        hr { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 8px 0; }
+        .hint { font-size: 0.72em; opacity: 0.5; margin-left: 126px; margin-bottom: 5px; }
+        .note {
+            font-size: 0.78em; opacity: 0.65; line-height: 1.4; margin-top: 8px;
+            padding: 6px 8px; background: rgba(255,255,255,0.05); border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="titlebar">
+        <header>
+            <div class="logo"><img title="icon" src="../images/icon.png"/></div>
+            <div class="title">Radio - Settings</div>
+            <div class="filler"></div>
+            <div class="buttons">
+                <div title="Close this window" class="button close electron-only">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <div id="settings">
+        <form id="options" class="section">
+            <div class="title">Radio</div>
+
+            <label title="Station to tune in (you can also switch from the widget)">
+                <key>Station:</key>
+                <select name="channel">
+                    <!-- Stations loaded from the NowPlay radio API by JS -->
+                </select>
+            </label>
+
+            <label title="When to start playing">
+                <key>Autoplay:</key>
+                <select name="autoplay">
+                    <option value="none">None (press play)</option>
+                    <option value="immediate">When the widget opens</option>
+                    <option value="on_event_start">When an event starts</option>
+                </select>
+            </label>
+
+            <hr/>
+            <div class="title">Requests</div>
+
+            <label title="Shown next to your requests on the radio (optional)">
+                <key>Your name:</key>
+                <input type="text" name="requesterName" maxlength="40" placeholder="optional"/>
+            </label>
+
+            <div class="hint">Shown next to your requests (panel: arrow button on the bar).</div>
+
+            <hr/>
+            <div class="title">Display</div>
+
+            <label title="When to hide the widget">
+                <key>Hide when:</key>
+                <select name="hideWhen">
+                    <option value="never">Never</option>
+                    <option value="speed0">Speed is 0</option>
+                    <option value="watts0">Watts are 0</option>
+                </select>
+            </label>
+
+            <label>
+                <key>Opacity:</key>
+                <input type="range" name="opacity" min="0.2" max="1" step="0.05"/>
+                <input type="number" name="opacity" min="0.2" max="1" step="0.05"/>
+            </label>
+
+            <div class="note">Same radio as www.lucadegre.it/nowplay/radio, in sync with the website and Discord. Music by Luca DEGRE, royalty-free for your streams.</div>
+        </form>
+    </div>
+</body>
+</html>
