@@ -3,7 +3,7 @@
 Professional widget collection for competitive Zwift racing and streaming.
 
 **Author:** Luca De Gregorio  
-**Version:** 3.6.0  
+**Version:** 3.7.0  
 **License:** MIT
 
 ---
@@ -55,12 +55,23 @@ Music player with NowPlay integration for streaming.
 ### 📻 Radio
 NowPlay web radio inside Sauce, in sync with everyone listening on the website and on Discord.
 
-- Compact "now playing" bar that scales with the window; play/stop and volume
+- "Now playing" bar that fits any window shape (wide, square, tall): the text always fills the space
+- One button: click to switch the radio on/off, mouse wheel for the volume
+- Tap the station name to change station; cover and title stay updated even when the radio is off
 - Stations (Zwift Time, All Songs, Luca's Favorite, Abyss Bloom, Pop)
 - Thumbs up/down on the track on air
 - Song requests: pick a track of the station, it plays right after the current one
 - Autoplay when the widget opens or when an event starts
 - Royalty-free music by Luca DEGRE, safe for streaming
+
+### 💬 Chat Translate
+The Zwift chat, translated into your language.
+
+- Every message translated as it arrives; messages already in your language are left untouched
+- Free Google translator, no setup; or your own Gemini key for a better grasp of Zwift slang
+- Optional read-aloud of the translated messages (your team only, or everyone)
+- Adjustable text size, follows the newest message automatically
+- Read only: Sauce follows the race in Fan View, so it cannot send messages or see private ones
 
 ### 📜 Ticker
 Customizable scrolling text overlay.
@@ -88,6 +99,7 @@ Customizable scrolling text overlay.
 
 - Sauce for Zwift v1.0.0 or later
 - Player and Radio stream from www.lucadegre.it (internet connection required)
+- Chat Translate sends the chat messages to Google Translate (or to Gemini, if you choose it) to translate them
 
 ---
 

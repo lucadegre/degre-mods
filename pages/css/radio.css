@@ -1,4 +1,4 @@
-/* DEGRE Radio v1.1 - CSS
+/* DEGRE Radio v1.4 - CSS
    radio.html: compact "now playing" bar (the whole overlay window).
    radio-panel.html: stations, votes, requests in a separate child window. */
 
@@ -34,96 +34,184 @@ html, body {
 .radio.hidden-by-setting { opacity: 0.02; }
 #content:hover .radio.hidden-by-setting { opacity: 1; }
 
-/* === BAR ===
-   The bar fills the whole overlay window and scales with its height:
-   resize the window vertically and cover, text and buttons grow with it.
-   (vh = window height, since the window is the viewport) */
+/* === BAR (v1.4) ===
+   Fills the overlay window, whatever its shape. radio.mjs sets
+   data-layout on .radio from the window proportions:
+     wide  (w/h >= 2.4)  cover | station ▾ · ON AIR · 🎧 | button
+                         title · artist across the whole width
+     side  (1.3 - 2.4)   cover (button on its corner) | station / title / artist
+     stack (< 1.3)       cover on top (button on its corner), lines below
+   The cover sits in a size container and is always a square that fits it.
+   Text is sized by fitText() in radio.mjs. Button: click = on/off, wheel =
+   volume (ring = level); on hover the slider takes the place of the top line. */
 .radio { height: 100%; }
 .bar {
-    display: flex;
-    align-items: center;
-    gap: clamp(8px, 11vh, 18px);
-    padding: clamp(6px, 8vh, 14px) clamp(8px, 11vh, 18px);
+    display: grid;
+    gap: 2vmin 3vmin;
+    padding: 4.5vmin 5vmin;
     background: rgba(18, 18, 30, 0.82);
-    border-radius: clamp(10px, 14vh, 20px);
+    border-radius: 9vmin;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
     height: 100%;
     box-sizing: border-box;
 }
-.bar .cover {
+.radio[data-layout="wide"] .bar {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
+    grid-template-areas: "cover top power" "now now now";
+}
+.radio[data-layout="side"] .bar {
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 2fr);
+    grid-template-areas: "cover top" "cover now";
+}
+.radio[data-layout="stack"] .bar {
+    grid-template-columns: minmax(0, 1fr);
+    /* Cover + lines packed and centred: in a tall window the text is limited
+       by the width anyway, extra height would only be empty rows */
+    grid-template-rows: auto auto auto;
+    grid-template-areas: "cover" "top" "now";
+    align-content: center;
+}
+.radio[data-layout="stack"] .bar .top { height: min(13vw, 12vh); }
+.radio[data-layout="stack"] .bar .now { height: min(30vw, 26vh); }
+
+.bar .coverbox {
+    grid-area: cover;
+    position: relative;
+    container-type: size;
+    min-width: 0;
+    min-height: 0;
     height: 100%;
-    aspect-ratio: 1 / 1;
-    border-radius: clamp(6px, 8vh, 14px);
+}
+.radio[data-layout="wide"] .bar .coverbox,
+.radio[data-layout="side"] .bar .coverbox { aspect-ratio: 1 / 1; }
+.radio[data-layout="side"] .bar .coverbox { max-width: 48vw; }
+.radio[data-layout="stack"] .bar .coverbox { width: 100%; height: auto; aspect-ratio: 1 / 1; max-height: 52vh; }
+.bar .cover {
+    --s: min(100cqw, 100cqh);
+    position: absolute;
+    width: var(--s);
+    height: var(--s);
+    left: calc((100cqw - var(--s)) / 2);
+    top: calc((100cqh - var(--s)) / 2);
+    border-radius: 14%;
     background: #2a2a4a center/cover no-repeat;
-    flex: 0 0 auto;
     cursor: pointer;
 }
-.bar .info {
-    flex: 1 1 auto;
+
+.bar .top, .bar .now {
     min-width: 0;
-    line-height: 1.25;
-}
-.bar .info .line {
+    min-height: 0;
+    height: 100%;
     display: flex;
     align-items: center;
-    gap: clamp(4px, 6vh, 10px);
-    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    line-height: 1.12;
 }
-.bar .live {
-    font-size: clamp(8px, 11vh, 13px);
+.bar .top { grid-area: top; gap: 0.45em; }
+.bar .now { grid-area: now; }
+.radio[data-layout="side"] .bar .now,
+.radio[data-layout="stack"] .bar .now { flex-direction: column; align-items: flex-start; justify-content: center; }
+.radio[data-layout="stack"] .bar .top { justify-content: center; }
+.radio[data-layout="stack"] .bar .now { align-items: center; }
+.bar .top > *, .bar .now > * { flex: 0 0 auto; max-width: none; }
+
+.station-btn {
+    display: inline-flex;
+    align-items: center;
+    color: #fff;
+    text-decoration: none;
     font-weight: 700;
-    letter-spacing: 0.12em;
-    padding: 0.2em 0.6em;
+    cursor: pointer;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.35);
+}
+.station-btn:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.station-btn .chev { display: flex; }
+.station-btn .chev svg { width: 1.05em; height: 1.05em; display: block; }
+.bar .live {
+    font-size: 0.7em;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    padding: 0.15em 0.5em;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.14);
     color: rgba(255, 255, 255, 0.7);
-    flex: 0 0 auto;
 }
 .radio.playing .bar .live { background: #e53935; color: #fff; }
-.bar .station {
-    font-size: clamp(9px, 12.5vh, 15px);
-    color: rgba(255, 255, 255, 0.55);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.bar .listeners {
-    font-size: clamp(9px, 12.5vh, 15px);
-    color: rgba(255, 255, 255, 0.55);
-    flex: 0 0 auto;
-}
-.bar .title {
-    font-size: clamp(13px, 18vh, 28px);
-    font-weight: 700;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.bar .artist {
-    font-size: clamp(10px, 14vh, 19px);
-    color: rgba(255, 255, 255, 0.7);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.bar .nextreq {
-    font-size: clamp(9px, 12.5vh, 15px);
-    color: var(--accent);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.bar .nextreq:empty { display: none; }
+.radio.tuning .bar .live { background: rgba(255, 140, 66, 0.4); color: #fff; }
+.bar .listeners { font-size: 0.8em; color: rgba(255, 255, 255, 0.6); }
 
-.bar .controls {
+.bar .now .title { font-weight: 700; }
+.bar .now .artist { color: rgba(255, 255, 255, 0.7); }
+.radio[data-layout="wide"] .bar .now .artist { margin-left: 0.3em; }
+.radio[data-layout="wide"] .bar .now .artist:not(:empty)::before { content: '· '; }
+.bar .now .nextreq { color: var(--accent); font-size: 0.85em; }
+.radio[data-layout="wide"] .bar .now .nextreq { margin-left: 0.6em; }
+.bar .now .nextreq:empty { display: none; }
+
+/* Power button: own column in "wide", a badge on the cover's corner otherwise */
+.bar .power { display: flex; align-items: center; }
+.radio[data-layout="wide"] .bar .power { grid-area: power; height: 100%; }
+.coverbox .power {
+    --s: min(100cqw, 100cqh);
+    position: absolute;
+    width: calc(var(--s) * 0.4);
+    height: calc(var(--s) * 0.4);
+    right: calc((100cqw - var(--s)) / 2 - var(--s) * 0.04);
+    bottom: calc((100cqh - var(--s)) / 2 - var(--s) * 0.04);
+    z-index: 2;
+}
+.pbtn {
+    position: relative;
+    height: 100%;
+    aspect-ratio: 1 / 1;
+    border: none;
+    border-radius: 50%;
+    padding: 0;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.8);
+    background: conic-gradient(rgba(255, 255, 255, 0.5) var(--vol, 70%), rgba(255, 255, 255, 0.14) 0);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
     display: flex;
     align-items: center;
-    gap: clamp(3px, 5vh, 10px);
-    flex: 0 0 auto;
+    justify-content: center;
 }
+.pbtn::before {
+    content: '';
+    position: absolute;
+    inset: 9%;
+    border-radius: 50%;
+    background: #2b2b42;
+    transition: background 0.2s ease;
+}
+.pbtn svg { position: relative; z-index: 1; width: 52%; height: 52%; }
+.pbtn:hover::before { background: #3a3a58; }
+.radio.playing .pbtn { color: #1a1a2e; background: conic-gradient(var(--accent) var(--vol, 70%), rgba(255, 255, 255, 0.18) 0); }
+.radio.playing .pbtn::before { background: var(--accent); }
+.radio.tuning .pbtn::before { animation: tuning 0.9s ease-in-out infinite; }
+@keyframes tuning { 50% { background: rgba(255, 140, 66, 0.55); } }
+
+/* Volume: same cell as the top line, shown instead of it */
+.bar .volbox {
+    grid-area: top;
+    display: none;
+    align-items: center;
+    gap: 0.6em;
+    min-width: 0;
+    height: 100%;
+}
+.bar .volbox .volslider { flex: 1; min-width: 0; accent-color: var(--accent); margin: 0; }
+.bar .volbox .volpct { flex: 0 0 auto; font-weight: 800; font-size: max(9px, 6vmin); color: #fff; }
+.radio.vol-open .bar .volbox, .radio.show-vol .bar .volbox { display: flex; }
+.radio.vol-open .bar .top, .radio.show-vol .bar .top { display: none; }
+.radio.show-vol:not(.vol-open) .bar .volbox .volslider { display: none; }
+
+/* Round icon buttons: used by the panel window */
 .ibtn {
-    width: clamp(28px, 39vh, 56px);
-    height: clamp(28px, 39vh, 56px);
+    width: 32px;
+    height: 32px;
     border: none;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.1);
@@ -137,26 +225,9 @@ html, body {
 }
 .ibtn:hover { background: rgba(255, 255, 255, 0.22); }
 .ibtn svg { width: 58%; height: 58%; }
-.ibtn.play { background: var(--accent); color: #1a1a2e; width: clamp(32px, 44vh, 64px); height: clamp(32px, 44vh, 64px); }
 a.ibtn { text-decoration: none; }
-.ibtn.play:hover { filter: brightness(1.1); }
 .ibtn.active { background: var(--accent); color: #1a1a2e; }
 .ibtn.voted { color: var(--accent); }
-
-/* Volume: slim slider that appears next to the speaker on hover */
-.vol {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-.vol input[type="range"] {
-    width: 0;
-    opacity: 0;
-    transition: width 0.2s ease, opacity 0.2s ease;
-    accent-color: var(--accent);
-    height: 4px;
-}
-.vol:hover input[type="range"], .vol input[type="range"]:focus { width: 70px; opacity: 1; }
 
 /* === PANEL (separate child window: radio-panel.html) === */
 body.radio-panel-page { background: #1a1a2e !important; }

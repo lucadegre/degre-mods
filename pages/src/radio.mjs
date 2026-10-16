@@ -1,5 +1,5 @@
 /**
- * DEGRE Radio v1.1
+ * DEGRE Radio v1.4
  * Native Sauce4Zwift widget for the NowPlay web radio: synced stream (same
  * clock as www.lucadegre.it/nowplay/radio and the Discord bot), stations,
  * thumbs, listener requests. No iframe: it talks to the radio API directly.
@@ -81,6 +81,10 @@ function icon(name) {
         up: 'M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z',
         down: 'M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z',
         external: 'M19 19H5V5h7V3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z',
+        volumeOn: 'M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z',
+        volumeOff: 'M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z',
+        radio: 'M3.24 6.15C2.51 6.43 2 7.17 2 8v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8c0-1.11-.89-2-2-2H8.3l8.26-3.34L15.88 1 3.24 6.15zM7 20a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm13-8h-2v-2h-2v2H4V8h16v4z',
+        chevron: 'M7 10l5 5 5-5z',
     };
     return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="${paths[name]}"/></svg>`;
 }
@@ -221,12 +225,14 @@ async function syncPlayer(refreshMeta = false) {
         data = await apiNow(state.isPlaying);
     } catch (e) {
         console.error('[Radio] sync failed:', e);
-        el.station.textContent = 'Radio unreachable';
+        el.live.textContent = 'OFFLINE';
+        el.live.title = 'Radio unreachable';
         return;
     }
     state.isOverride = !!data.is_override;
     updateListeners(data.listeners);
     el.nextreq.textContent = requestLine(data);
+    requestAnimationFrame(fitAll);
 
     const changed = !state.currentTrack || state.currentTrack.id !== data.track.id;
 
@@ -297,7 +303,8 @@ async function onEnded() {
 
 async function play() {
     state.wantPlaying = true;
-    el.station.textContent = 'Syncing…';
+    updatePlayButton();
+    updateStationLabel();
     try {
         const data = await apiNow(false);
         state.isOverride = !!data.is_override;
@@ -321,9 +328,9 @@ async function play() {
         startPolling();
     } catch (e) {
         console.error('[Radio] play failed:', e);
-        el.station.textContent = 'Radio unreachable';
         state.wantPlaying = false;
         updatePlayButton();
+        el.live.textContent = 'OFFLINE';
     }
 }
 
@@ -365,58 +372,100 @@ function buildBar() {
     el.root = document.createElement('div');
     el.root.className = 'radio';
 
+    // Layout (grid): cover | station + on air | power/volume
+    //                title · artist across the whole width, underneath
     el.bar = document.createElement('div');
     el.bar.className = 'bar';
+    el.coverBox = document.createElement('div');
+    el.coverBox.className = 'coverbox';
     el.cover = document.createElement('div');
     el.cover.className = 'cover';
     el.cover.title = 'Open in NowPlay';
+    el.coverBox.appendChild(el.cover);
     el.cover.addEventListener('click', () => {
         const t = state.currentTrack;
         window.open(t && t.album_slug ? `${BASE}/nowplay/album/${t.album_slug}` : `${BASE}/nowplay/radio/`, '_blank');
     });
 
-    el.info = document.createElement('div');
-    el.info.className = 'info';
-    el.info.innerHTML = `
-        <div class="line"><span class="live">RADIO</span><span class="station"></span><span class="listeners"></span></div>
-        <div class="title">NowPlay radio</div>
-        <div class="artist">Press play to tune in</div>
-        <div class="nextreq"></div>`;
-    el.live = el.info.querySelector('.live');
-    el.station = el.info.querySelector('.station');
-    el.listeners = el.info.querySelector('.listeners');
-    el.title = el.info.querySelector('.title');
-    el.artist = el.info.querySelector('.artist');
-    el.nextreq = el.info.querySelector('.nextreq');
+    el.top = document.createElement('div');
+    el.top.className = 'top';
+    // The station label IS the button to change station: it opens the panel
+    // (stations, votes, requests) as a Sauce child window
+    el.more = document.createElement('a');
+    el.more.className = 'station-btn open-settings';
+    el.more.title = 'Change station · votes · song requests';
+    el.more.href = './radio-panel.html?width=380&height=520&child-window';
+    el.more.target = 'degre-radio-panel';
+    el.more.innerHTML = `<span class="station"></span><span class="chev">${icon('chevron')}</span>`;
+    el.station = el.more.querySelector('.station');
+    el.live = document.createElement('span');
+    el.live.className = 'live';
+    el.listeners = document.createElement('span');
+    el.listeners.className = 'listeners';
+    el.top.appendChild(el.more);
+    el.top.appendChild(el.live);
+    el.top.appendChild(el.listeners);
 
-    el.controls = document.createElement('div');
-    el.controls.className = 'controls';
-    el.vol = document.createElement('div');
-    el.vol.className = 'vol';
-    el.volBtn = button('volbtn', 'volume', 'Volume');
+    // One big button: click = radio on / off; mouse wheel = volume (the ring
+    // around it shows the level); a slim slider appears on hover as well
+    el.power = document.createElement('div');
+    el.power.className = 'power';
+    el.play = document.createElement('button');
+    el.play.className = 'pbtn';
+    el.play.title = 'Radio on / off · mouse wheel: volume';
+    el.play.addEventListener('click', togglePlay);
+    el.play.addEventListener('wheel', ev => {
+        ev.preventDefault();
+        const v = Math.min(1, Math.max(0, (audio?.volume ?? 0.7) + (ev.deltaY < 0 ? 0.05 : -0.05)));
+        setVolume(Math.round(v * 100) / 100);
+        flashVolume();
+    }, {passive: false});
+    el.volPct = document.createElement('span');
+    el.volPct.className = 'volpct';
     el.volSlider = document.createElement('input');
     el.volSlider.type = 'range';
     el.volSlider.min = '0';
     el.volSlider.max = '100';
-    el.volSlider.addEventListener('input', () => setVolume(el.volSlider.value / 100));
-    el.vol.appendChild(el.volSlider);
-    el.vol.appendChild(el.volBtn);
-    el.play = button('play', 'play', 'Play / stop');
-    el.play.addEventListener('click', togglePlay);
-    // Panel opens as a Sauce child window (same mechanism as the settings gear)
-    el.more = document.createElement('a');
-    el.more.className = 'ibtn more open-settings';
-    el.more.title = 'Stations, votes, requests';
-    el.more.href = './radio-panel.html?width=380&height=520&child-window';
-    el.more.target = 'degre-radio-panel';
-    el.more.innerHTML = icon('more');
-    el.controls.appendChild(el.vol);
-    el.controls.appendChild(el.play);
-    el.controls.appendChild(el.more);
+    el.volSlider.className = 'volslider';
+    el.volSlider.title = 'Volume';
+    el.volSlider.addEventListener('input', () => {
+        setVolume(el.volSlider.value / 100);
+        flashVolume();
+    });
+    el.power.appendChild(el.play);
+    // Slider and percentage take the place of the top line while shown,
+    // instead of floating over it
+    el.volBox = document.createElement('div');
+    el.volBox.className = 'volbox';
+    el.volBox.appendChild(el.volSlider);
+    el.volBox.appendChild(el.volPct);
 
-    el.bar.appendChild(el.cover);
-    el.bar.appendChild(el.info);
-    el.bar.appendChild(el.controls);
+    el.now = document.createElement('div');
+    el.now.className = 'now';
+    el.now.innerHTML = '<span class="title">NowPlay radio</span><span class="artist"></span><span class="nextreq"></span>';
+    el.title = el.now.querySelector('.title');
+    el.artist = el.now.querySelector('.artist');
+    el.nextreq = el.now.querySelector('.nextreq');
+
+    el.bar.appendChild(el.coverBox);
+    el.bar.appendChild(el.top);
+    el.bar.appendChild(el.power);
+    el.bar.appendChild(el.volBox);
+    el.bar.appendChild(el.now);
+    // Keep the slider open while the mouse is on the button or on the slider
+    for (const t of [el.power, el.volBox]) {
+        t.addEventListener('mouseenter', () => el.root.classList.add('vol-open'));
+        t.addEventListener('mouseleave', () => setTimeout(() => {
+            if (!el.power.matches(':hover') && !el.volBox.matches(':hover')) {
+                el.root.classList.remove('vol-open');
+            }
+        }, 250));
+    }
+    new ResizeObserver(() => {
+        applyLayout();
+        fitAll();
+    }).observe(document.body);
+    applyLayout();
     el.root.appendChild(el.bar);
     content.appendChild(el.root);
 
@@ -429,24 +478,88 @@ function buildBar() {
     audio.addEventListener('error', () => console.error('[Radio] audio error'));
 }
 
+// Layout by window shape (the window is the viewport):
+//  wide   (w/h >= 2.4): cover | station line | button, title row underneath
+//  side   (1.3 - 2.4):  cover with the button on its corner | lines on the right
+//  stack  (< 1.3, square or tall): cover on top (button on its corner), lines below
+const WIDE_MIN = 2.4;
+const SIDE_MIN = 1.3;
+function applyLayout() {
+    const a = innerWidth / Math.max(1, innerHeight);
+    const mode = a >= WIDE_MIN ? 'wide' : a >= SIDE_MIN ? 'side' : 'stack';
+    if (el.root.dataset.layout === mode) {
+        return;
+    }
+    el.root.dataset.layout = mode;
+    // The button is its own column in "wide", a badge on the cover otherwise
+    if (mode === 'wide') {
+        el.bar.insertBefore(el.power, el.volBox);
+    } else {
+        el.coverBox.appendChild(el.power);
+    }
+}
+
+// Text that always fits its box: as big as the row height allows, smaller
+// when the width says so (Luca: "better small than cut, it reads anyway").
+// A column box (title and artist on two lines) shares the height among them.
+function fitText(box, heightRatio) {
+    if (!box) {
+        return;
+    }
+    const h = box.clientHeight;
+    if (!h) {
+        return;
+    }
+    const column = getComputedStyle(box).flexDirection === 'column';
+    const lines = column ? Math.max(1, [...box.children].filter(c => c.textContent.trim()).length) : 1;
+    let size = Math.max(6, h * heightRatio / (column ? lines * 0.85 : 1));
+    box.style.fontSize = `${size}px`;
+    const over = () => box.scrollWidth > box.clientWidth + 0.5 || box.scrollHeight > box.clientHeight + 1;
+    for (let i = 0; i < 40 && over() && size > 6; i++) {
+        size = Math.max(6, size * 0.92);
+        box.style.fontSize = `${size}px`;
+    }
+}
+
+function fitAll() {
+    fitText(el.top, 0.42);
+    fitText(el.now, 0.72);
+}
+
+let volFlashTimer = null;
+function flashVolume() {
+    el.volPct.textContent = `${Math.round((audio?.volume ?? 0) * 100)}%`;
+    el.root.classList.add('show-vol');
+    clearTimeout(volFlashTimer);
+    volFlashTimer = setTimeout(() => el.root.classList.remove('show-vol'), 1200);
+}
+
 function updatePlayButton() {
-    el.play.innerHTML = icon(state.isPlaying ? 'stop' : 'play');
-    el.root.classList.toggle('playing', state.isPlaying);
+    const on = state.isPlaying;
+    const tuning = state.wantPlaying && !on;
+    el.play.innerHTML = icon(on || tuning ? 'volumeOn' : 'volumeOff');
+    el.root.classList.toggle('playing', on);
+    el.root.classList.toggle('tuning', tuning);
 }
 
 function updateStationLabel() {
-    el.station.textContent = stationName(state.channels, common.settingsStore.get('channel')) + (state.isPlaying ? '' : ' · stopped');
+    el.station.textContent = stationName(state.channels, common.settingsStore.get('channel'));
+    el.live.textContent = state.isPlaying ? 'ON AIR' : (state.wantPlaying ? 'TUNING' : 'OFF');
+    fitAll();
 }
 
 function updateListeners(counts) {
     if (!counts) { el.listeners.textContent = ''; return; }
     el.listeners.textContent = `🎧 ${counts.channel}`;
+    requestAnimationFrame(fitAll);
     el.listeners.title = `${counts.channel} listening on this station · ${counts.total} on the whole radio`;
 }
 
 function updateTrackInfo(track) {
     el.title.textContent = track.title || 'Unknown';
-    el.artist.textContent = (track.artist || '') + (track.album ? ' · ' + track.album : '');
+    el.artist.textContent = track.artist || '';
+    el.now.title = [track.title, track.artist, track.album].filter(Boolean).join(' · ');
+    fitAll();
     el.cover.style.backgroundImage = track.cover_url ? `url('${absUrl(track.cover_url)}')` : '';
     updateStationLabel();
 }
@@ -454,6 +567,8 @@ function updateTrackInfo(track) {
 function setVolume(v) {
     audio.volume = v;
     el.volSlider.value = Math.round(v * 100);
+    // the ring around the power button shows the volume
+    el.power.style.setProperty('--vol', `${Math.round(v * 100)}%`);
     common.settingsStore.set('volume', v);
 }
 
@@ -508,14 +623,17 @@ export async function main() {
         if (changed.has('volume') && audio) {
             audio.volume = changed.get('volume');
             el.volSlider.value = Math.round(changed.get('volume') * 100);
+            el.power.style.setProperty('--vol', `${Math.round(changed.get('volume') * 100)}%`);
         }
         updateVisibility();
     });
 
-    // Keep the "now playing" line fresh while stopped (light poll, no audio)
-    setInterval(() => { if (!state.isPlaying) syncPlayer(true); }, 30000);
+    // Radio off: keep cover and title of what is on air fresh anyway. The
+    // info comes from the radio API (a few hundred bytes), not from the MP3,
+    // so nothing is streamed and the listener is not counted
+    setInterval(() => { if (!state.isPlaying && !state.wantPlaying) syncPlayer(true); }, POLL_MS);
 
-    console.log('[Radio v1.1] Initialized');
+    console.log('[Radio v1.4] Initialized');
 }
 
 // =====================================================

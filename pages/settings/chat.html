@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" class="settings-page" tabindex="0" data-settings-key="degre-chat-settings-v1">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'; connect-src 'self' https://translate.googleapis.com https://generativelanguage.googleapis.com;"/>
+
+    <title>DEGRE Chat Translate - Settings</title>
+
+    <link id="favicon" rel="shortcut icon" href="../images/icon.png"/>
+    <link rel="stylesheet" href="/pages/css/common.css"/>
+
+    <script type="module">
+        import {settingsMain} from '../src/chat.mjs';
+        settingsMain();
+    </script>
+
+    <style>
+        .section { padding: 6px 12px; }
+        .section .title {
+            font-weight: bold;
+            font-size: 0.9em;
+            margin: 6px 0;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        label { display: flex; align-items: center; margin-bottom: 5px; gap: 6px; }
+        key { flex: 0 0 130px; font-size: 0.85em; }
+        select { flex: 1; max-width: 200px; padding: 2px 4px; }
+        input[type="password"], input[type="text"] { flex: 1; max-width: 200px; padding: 3px 6px; }
+        input[type="range"] { flex: 1; max-width: 110px; }
+        input[type="number"] { width: 60px; }
+        .hint { font-size: 0.72em; opacity: 0.6; margin: 0 0 6px 136px; line-height: 1.35; }
+        .row { display: flex; gap: 6px; margin: 0 0 6px 136px; flex-wrap: wrap; }
+        .row button, .row a {
+            font-size: 0.75em; padding: 3px 8px; border-radius: 4px; cursor: pointer;
+            background: rgba(255,255,255,0.12); color: inherit; border: 1px solid rgba(255,255,255,0.2);
+            text-decoration: none;
+        }
+        .test-result { font-size: 0.75em; margin: 0 0 6px 136px; min-height: 1.1em; }
+        .test-result.ok { color: #7be08b; }
+        .test-result.err { color: #ff9a9a; }
+        .note {
+            font-size: 0.75em; opacity: 0.7; line-height: 1.4; margin-top: 8px;
+            padding: 6px 8px; background: rgba(255,255,255,0.05); border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="titlebar">
+        <header>
+            <div class="logo"><img title="icon" src="../images/icon.png"/></div>
+            <div class="title">Chat Translate - Settings</div>
+            <div class="filler"></div>
+            <div class="buttons">
+                <div title="Close this window" class="button close electron-only"><ms>close</ms></div>
+            </div>
+        </header>
+    </div>
+
+    <div id="settings">
+        <form id="options" class="section">
+            <div class="title">Translation</div>
+
+            <label title="Messages are translated into this language">
+                <key>Translate into:</key>
+                <select name="targetLang"><!-- filled by JS --></select>
+            </label>
+
+            <label title="Show the original message under the translation">
+                <key>Show original:</key>
+                <input type="checkbox" name="showOriginal"/>
+            </label>
+
+            <label title="Free = Google Translate, no setup. Gemini = better with Zwift slang, needs your own free key.">
+                <key>Translator:</key>
+                <select name="engine">
+                    <option value="google">Free (Google Translate)</option>
+                    <option value="gemini">Smart (Gemini, your own key)</option>
+                </select>
+            </label>
+
+            <label title="Your Google Gemini API key. Stored only on this computer.">
+                <key>Gemini key:</key>
+                <input type="password" name="geminiKey" autocomplete="off" placeholder="paste your key"/>
+            </label>
+            <div class="row">
+                <button id="test-key">Test key</button>
+                <button id="copy-question">Copy a "how do I get a key?" question</button>
+                <a href="https://aistudio.google.com/apikey" target="_blank">Open Google AI Studio</a>
+            </div>
+            <div id="test-result" class="test-result"></div>
+            <div class="hint">The key stays on this computer and only talks to Google.
+                If Gemini is busy or the key fails, messages use the free translator.</div>
+
+            <div class="title">Read aloud</div>
+
+            <label title="Which messages the computer reads aloud (already translated)">
+                <key>Read aloud:</key>
+                <select name="ttsMode">
+                    <option value="off">Off</option>
+                    <option value="team">My team only</option>
+                    <option value="all">All messages</option>
+                </select>
+            </label>
+            <label title="Say the name of the rider before the message">
+                <key>Say the name:</key>
+                <input type="checkbox" name="ttsName"/>
+            </label>
+            <label>
+                <key>Voice:</key>
+                <select name="ttsVoice"><!-- filled by JS --></select>
+            </label>
+            <label>
+                <key>Speed:</key>
+                <input type="range" name="ttsRate" min="0.7" max="1.6" step="0.05"/>
+                <input type="number" name="ttsRate" min="0.7" max="1.6" step="0.05"/>
+            </label>
+            <label>
+                <key>Volume:</key>
+                <input type="range" name="ttsVolume" min="0" max="100" step="5"/>
+                <input type="number" name="ttsVolume" min="0" max="100" step="5"/>%
+            </label>
+            <div class="row"><button id="try-tts">Try the voice</button></div>
+            <div class="hint">Your team is recognised from the tag in your Zwift name. Your own messages and the
+                ones already on screen when the window opens are not read. Direct messages never reach Sauce
+                (it reads the chat with its own Fan View account), so they are not read either. The speaker button in the chat title bar
+                mutes it on the fly.</div>
+
+            <div class="title">Display</div>
+
+            <label title="Smaller text fits more messages in the window">
+                <key>Text size:</key>
+                <input type="range" name="textSize" min="60" max="160" step="5"/>
+                <input type="number" name="textSize" min="60" max="160" step="5"/>%
+            </label>
+            <label title="Remove old messages after this many seconds. 0 = never.">
+                <key>Message cleanup:</key>
+                <input type="number" min="0" step="1" name="cleanup"/> <small>seconds</small>
+            </label>
+            <label title="Power, heart rate and gap of the sender">
+                <key>Live data:</key>
+                <input type="checkbox" name="showLive"/>
+            </label>
+            <label title="Most recent messages on top">
+                <key>Reverse order:</key>
+                <input type="checkbox" name="reverseOrder"/>
+            </label>
+            <label>
+                <key>Right align:</key>
+                <input type="checkbox" name="rightAlign"/>
+            </label>
+            <label>
+                <key>Transparency:</key>
+                <input type="range" name="messageTransparency" min="0" max="100" step="1"/>
+                <input type="number" name="messageTransparency" min="0" max="100"/>%
+            </label>
+            <label title="For streamers using OBS window capture">
+                <key>Solid background:</key>
+                <input type="checkbox" name="solidBackground"/>
+            </label>
+            <label>
+                <key>Background color:</key>
+                <input type="color" name="backgroundColor" data-depends-on="solidBackground"/>
+            </label>
+
+            <label title="Shows fake messages in other languages every few seconds, to try the translation without riding. Close and reopen the chat window after changing it.">
+                <key>Demo messages:</key>
+                <input type="checkbox" name="demo"/> <small>reopen the window</small>
+            </label>
+
+            <div class="note">The chat arrives untranslated from Zwift: each message is
+                translated on this computer when it shows up. Messages already in your
+                language, and the usual "RO", "gg", "thx", are left as they are.</div>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,10 +1,10 @@
 {
     "manifest_version": 1,
     "name": "DEGRE",
-    "description": "Mod collection by Luca DEGRE - Power Bar, Player, Radio, Finish Well, Attack Radar, Ticker",
+    "description": "Mod collection by Luca DEGRE - Power Bar, Player, Radio, Chat Translate, Finish Well, Attack Radar, Ticker",
     "author": "Luca De Gregorio",
     "website_url": "https://lucadegre.it",
-    "version": "3.6.0",
+    "version": "3.7.0",
     "id": "degre-mods",
     "web_root": "pages",
     "windows": [
@@ -45,9 +45,23 @@
             "frame": false,
             "default_bounds": {
                 "width": 400,
-                "height": 72,
+                "height": 84,
                 "x": 760,
                 "y": 60
+            }
+        },
+        {
+            "file": "pages/chat.html",
+            "id": "degre-chat",
+            "name": "DEGRE Chat Translate",
+            "description": "Zwift chat (read only) with every message translated into your language and optionally read aloud: free Google translator or your own Gemini key",
+            "overlay": true,
+            "frame": false,
+            "default_bounds": {
+                "width": 380,
+                "height": 420,
+                "x": 60,
+                "y": 200
             }
         },
         {
